@@ -1,0 +1,881 @@
+-- ****************************************************************************************************************
+-- *                                Instructor: Dr. CHUTIPORN                                                     *
+-- *                                Name 1 : NGUYEN DUC DOANH - ID 122059                                         *
+-- *                                Name 2 : NGUYEN LE HIEU   - ID 122529                                         *
+-- *                                RDB Mini Project - HEALTH FOR YOU                                             *
+-- *                                HCM, OCT 30TH, 2021                                                           *
+-- ****************************************************************************************************************
+-- NOTE: In this project, we try to show all the knowledge we have learned while participating in this course, 
+--       we are looking forward to Dr. CHUTIPORN and Mr. Beer for feedback on the assessment of the points that are not correct 
+--       or need to be improved so that we can do better in the future. Thanks so much. 
+
+-- ****************************************************************************************************************
+-- *                                          DATA DEFINITION                                                     *  
+-- ****************************************************************************************************************
+
+-- checking : show all databases and drop database H4U
+SHOW DATABASES;
+DROP DATABASE H4U;
+
+-- create a new database
+CREATE DATABASE H4U;
+
+-- create a new table
+CREATE TABLE `H4U`.`DOCTOR`(
+		`Doctor_ID` VARCHAR(10) NOT NULL,
+        `Doctor_Lic_No` VARCHAR(10) NOT NULL,
+        `Doctor_Fname` VARCHAR(10) NOT NULL,
+        `Doctor_Lname` VARCHAR(10) NOT NULL,
+        `Doctor_Email_ID` VARCHAR(30) NOT NULL,
+        `Doctor_Phone` VARCHAR(15) NOT NULL,
+        `Doctor_Speciality` ENUM ('ALLERGY', 'CARDIOLOGY', 'DERMATOLOGY', 'DIETETICS', 'NEUROLOGY', 'GASTROENTEROLOGY') NOT NULL,
+        `Doctor_Education` ENUM ('PH.D','MASTER', 'BACHELOR') NOT NULL,
+        `Doctor_Date_Reg` DATETIME NOT NULL DEFAULT NOW(),
+        `Doctor_Gender` ENUM ('MALE', 'FEMALE') NOT NULL,
+        `Doctor_Account` VARCHAR(20) NOT NULL,
+        `Doctor_Password` VARCHAR(32) NOT NULL,
+        PRIMARY KEY (`Doctor_ID`));
+        
+ALTER TABLE `H4U`.`DOCTOR`
+	ADD UNIQUE (`Doctor_Lic_NO`),
+    ADD UNIQUE (`Doctor_Email_ID`),
+    ADD UNIQUE (`Doctor_Phone`),
+    ADD UNIQUE (`Doctor_Account`);
+    
+-- create a new table    
+CREATE TABLE `H4U`.`PATIENT`(
+		`Patient_ID` VARCHAR(10) NOT NULL,
+        `Patient_Fname` VARCHAR(10) NOT NULL,
+        `Patient_Lname` VARCHAR(10) NOT NULL,
+        `Patient_Email_ID` VARCHAR(30) NULL,
+        `Patient_Phone` VARCHAR(15) NOT NULL,
+        `Patient_DOB` DATE NOT NULL,
+        `Patient_Gender` ENUM ('MALE', 'FEMALE') NOT NULL,
+        `Patient_Address` ENUM ('HANOI', 'HUE', 'DANANG', 'NHATRANG', 'HOCHIMINH', 'CANTHO') NOT NULL,
+        `Patient_Date_Reg` DATETIME NOT NULL DEFAULT NOW(),
+        `Patient_Account` VARCHAR(20) NOT NULL,
+        `Patient_Password` VARCHAR(32) NOT NULL,
+        PRIMARY KEY (`Patient_ID`));
+
+ALTER TABLE `H4U`.`PATIENT`
+	ADD UNIQUE (`Patient_Email_ID`),
+    ADD UNIQUE (`Patient_Phone`),
+    ADD UNIQUE (`Patient_Account`);
+    
+-- create a new table    
+CREATE TABLE `H4U`.`APPOINTMENT`(
+		`Appointment_ID` VARCHAR(10) NOT NULL,
+        `Appointment_Reg_D` DATETIME NOT NULL DEFAULT NOW(),
+        `Appointment_Date` DATE NOT NULL,
+        `Appointment_Time` TIME NOT NULL,
+        `Appointment_Status` ENUM ('ONPROGRESS', 'DONE', 'CANCEL') DEFAULT 'ONPROGRESS',
+        `Appointment_Update_D` DATETIME NULL DEFAULT NOW(),
+        `Doctor_id` VARCHAR(10) NOT NULL,
+        `Patient_id` VARCHAR(10) NOT NULL,
+        PRIMARY KEY (`Appointment_ID`));
+    
+-- create a new table    
+CREATE TABLE `H4U`.`DIAGNOSIS`(
+		`H_Case_ID` VARCHAR(10) NOT NULL,
+        `H_Image` VARCHAR(50) NULL,
+        `H_Blood_Type` ENUM ('A', 'B', 'AB', 'O') NULL,
+        `H_Current_Signs` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+        `H_Drug_Allergy` ENUM ('YES', 'NO') NULL,
+        `H_Pregnancy` ENUM ('YES', 'NO') NULL,
+        `H_Blood_Pressure` VARCHAR(10) NULL,
+        `H_Heart_Rate` VARCHAR(3) NULL,
+        `H_Temperature` VARCHAR(2) NULL,
+        `H_Status` ENUM ('EMERGENCY','NORMAL') DEFAULT 'NORMAL',
+        `H_Other_Syms` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+        `H_Prescription_ID` VARCHAR(10) NOT NULL,
+        `H_Prescription_Date` DATETIME NULL,
+        `H_Prescription_Cont` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+        `Appointment_id` VARCHAR(10) NOT NULL,
+        PRIMARY KEY (`H_Case_ID`));
+
+ALTER TABLE `H4U`.`DIAGNOSIS`
+	ADD UNIQUE (`H_Prescription_ID`);
+
+-- create a new table        
+CREATE TABLE `H4U`.`BILL`(
+		`Payment_ID` BIGINT NOT NULL AUTO_INCREMENT,
+		`Bill_ID` VARCHAR(10) NOT NULL,
+        `Payment_Date` DATETIME NOT NULL DEFAULT NOW(),
+        `Payment_Cont` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+        `Total_Cost` BIGINT NOT NULL,
+        `Patient_id` VARCHAR(10) NOT NULL,
+        `Appointment_id` VARCHAR(10) NOT NULL,
+        PRIMARY KEY(`Payment_ID`));
+        
+ALTER TABLE `H4U`.`BILL`
+	ADD UNIQUE (`Bill_ID`);
+
+-- create a new table    
+CREATE TABLE `H4U`.`REVIEW` ( 
+		`Review_ID` BIGINT NOT NULL AUTO_INCREMENT,
+        `Review_Date` DATETIME NOT NULL DEFAULT NOW(),
+		`Review_Comment` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+        `Review_Rating` ENUM ('1', '2', '3', '4', '5', '6', '7', '8', '9','10') NOT NULL,
+        `Patient_id` VARCHAR(10) NOT NULL,
+        `Appointment_id` VARCHAR(10) NOT NULL,
+        PRIMARY KEY(`Review_ID`));
+
+-- create new constraints        
+ALTER TABLE `H4U`.`APPOINTMENT`
+	ADD CONSTRAINT doctor_id_appointment_doctor
+		FOREIGN KEY (Doctor_id) REFERENCES H4U.DOCTOR(Doctor_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE,
+	ADD CONSTRAINT patient_id_appointment_patient
+		FOREIGN KEY (Patient_id) REFERENCES H4U.PATIENT(Patient_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE,
+	ADD UNIQUE AppointmentTime_Doctor_Patient (Appointment_Time, Doctor_id, Patient_id);
+
+-- create new constraints
+ALTER TABLE `H4U`.`DIAGNOSIS`
+	ADD CONSTRAINT appointment_id_health_appointment
+		FOREIGN KEY (Appointment_id) REFERENCES H4U.APPOINTMENT(Appointment_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- create new constraints    
+ALTER TABLE `H4U`.`BILL`
+	ADD CONSTRAINT patient_id_bill_patient
+		FOREIGN KEY (Patient_id) REFERENCES H4U.PATIENT(Patient_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE,
+	ADD CONSTRAINT appointment_id_bill_appointment
+		FOREIGN KEY (Appointment_id) REFERENCES H4U.APPOINTMENT(Appointment_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE;
+ 
+-- create new constraints 
+ALTER TABLE `H4U`.`REVIEW`
+	ADD CONSTRAINT appointment_id_review_doctor
+		FOREIGN KEY (Appointment_id) REFERENCES H4U.APPOINTMENT(Appointment_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE,
+	ADD CONSTRAINT patient_id_review_patient
+		FOREIGN KEY (Patient_id) REFERENCES H4U.PATIENT(Patient_ID)
+		ON DELETE RESTRICT ON UPDATE CASCADE;
+        
+-- ****************************************************************************************************************
+-- *                                     OPERATION & TRANSACTION                                                  *  
+-- ****************************************************************************************************************
+        
+-- Insert the details of new doctors.
+SELECT * FROM H4U.DOCTOR;
+INSERT INTO H4U.DOCTOR
+(Doctor_ID, Doctor_Lic_No, Doctor_Fname, Doctor_Lname, Doctor_Email_ID, Doctor_Phone, Doctor_Speciality, Doctor_Education, Doctor_Date_Reg, Doctor_Gender, Doctor_Account, Doctor_Password) 
+VALUES
+('DOC_000001', 'LIC_100001', 'Van', 'Ngu', 'van.ngu@h4u.com.vn', '0903000001', 'ALLERGY', 'BACHELOR','2020-10-01 00:00:00','MALE','vannguyen', md5('baomat')),
+('DOC_000002', 'LIC_100002', 'Cha', 'Doa', 'cha.doa@h4u.com.vn', '0903000002', 'CARDIOLOGY', 'MASTER','2020-10-02 00:00:00','FEMALE','chaudoan', md5('antoanlam')),
+('DOC_000003', 'LIC_100003', 'Tra', 'Van', 'tra.van@h4u.com.vn', '0903000003', 'DERMATOLOGY', 'PH.D','2020-10-03 00:00:00','MALE','tranvan', md5('antoanlam')),
+('DOC_000004', 'LIC_100004', 'Kie', 'Tho', 'kie.tho@h4u.com.vn', '0903000004', 'DIETETICS', 'BACHELOR','2020-10-04 00:00:00','MALE','kientho', md5('antoanlam')),
+('DOC_000005', 'LIC_100005', 'Gia', 'Cat', 'gia.cat@h4u.com.vn', '0903000005', 'NEUROLOGY', 'MASTER','2020-10-04 00:00:00','FEMALE','giangca', md5('antoanlam')),
+('DOC_000006', 'LIC_100006', 'Dao', 'Lyn', 'dao.lyn@h4u.com.vn', '0903000006', 'GASTROENTEROLOGY', 'PH.D','2021-03-01 00:00:00','FEMALE','daoly', md5('antoanlam')),
+('DOC_000007', 'LIC_100007', 'Dun', 'Thu', 'dun.thu@h4u.com.vn', '0903000007', 'ALLERGY', 'BACHELOR','2021-03-02 00:00:00','MALE','dungthuong', md5('antoanlam')),
+('DOC_000008', 'LIC_100008', 'Con', 'Son', 'con.son@h4u.com.vn', '0903000008', 'CARDIOLOGY', 'MASTER','2021-03-03 00:00:00','FEMALE','soso', md5('antoanlam')),
+('DOC_000009', 'LIC_100009', 'Ngo', 'Len', 'ngo.len@h4u.com.vn', '0903000009', 'DERMATOLOGY', 'BACHELOR','2021-03-04 00:00:00','FEMALE','ngoanle', md5('antoanlam')),
+('DOC_000010', 'LIC_100010', 'Hie', 'Con', 'hie.con@h4u.com.vn', '0903000010', 'DIETETICS', 'MASTER','2021-03-05 00:00:00','MALE','hienco', md5('antoanlam')),
+('DOC_000011', 'LIC_100011', 'Chu', 'Hol', 'chu.hol@h4u.com.vn', '0903000011', 'NEUROLOGY', 'PH.D','2021-04-01 00:00:00','FEMALE','chutho', md5('antoanlam')),
+('DOC_000012', 'LIC_100012', 'Tru', 'Lon', 'tru.lon@h4u.com.vn', '0903000012', 'GASTROENTEROLOGY', 'PH.D', '2021-04-02 00:00:00', 'MALE','truclong', md5('antoanlam')),
+('DOC_000013', 'LIC_100013', 'Nav', 'Ugn', 'nav.ugn@h4u.com.vn', '0903000013', 'ALLERGY', 'MASTER','2021-04-03 00:00:00','FEMALE','navugn', md5('baomat')),
+('DOC_000014', 'LIC_100014', 'Ahc', 'Aod', 'ahc.aod@h4u.com.vn', '0903000014', 'CARDIOLOGY', 'BACHELOR','2021-04-04 00:00:00','MALE','ahcaod', md5('antoanlam')),
+('DOC_000015', 'LIC_100015', 'Atr', 'Nav', 'atr.nav@h4u.com.vn', '0903000015', 'DERMATOLOGY', 'PH.D','2021-04-05 00:00:00','FEMALE','atrnav', md5('antoanlam')),
+('DOC_000016', 'LIC_100016', 'Eik', 'Oth', 'eik.oth@h4u.com.vn', '0903000016', 'DIETETICS', 'MASTER','2021-04-06 00:00:00','MALE','eikoth', md5('antoanlam')),
+('DOC_000017', 'LIC_100017', 'Aig', 'Tac', 'aig.tac@h4u.com.vn', '0903000017', 'NEUROLOGY', 'BACHELOR','2021-04-07 00:00:00','MALE','aigtac', md5('antoanlam')),
+('DOC_000018', 'LIC_100018', 'Oad', 'Nyl', 'oad.nyl@h4u.com.vn', '0903000018', 'GASTROENTEROLOGY', 'PH.D','2021-04-08 00:00:00','FEMALE','oadnyl', md5('antoanlam')),
+('DOC_000019', 'LIC_100019', 'Nud', 'Uht', 'nud.uht@h4u.com.vn', '0903000019', 'ALLERGY', 'MASTER','2021-04-09 00:00:00','MALE','nuduht', md5('antoanlam')),
+('DOC_000020', 'LIC_100020', 'Noc', 'Nos', 'noc.nos@h4u.com.vn', '0903000020', 'CARDIOLOGY', 'BACHELOR','2021-04-10 00:00:00','FEMALE','nocnos', md5('antoanlam')),
+('DOC_000021', 'LIC_100021', 'Not', 'Noz', 'not.noz@h4u.com.vn', '0903000021', 'CARDIOLOGY', 'BACHELOR','2021-10-01 00:00:00','FEMALE','notnoz', md5('antoanlam'))
+;	               
+SELECT * FROM H4U.DOCTOR;
+
+-- Insert the details of new patients.
+SELECT * FROM H4U.PATIENT;
+INSERT INTO H4U.PATIENT
+(Patient_ID, Patient_Fname, Patient_Lname, Patient_Email_ID, Patient_Phone, Patient_DoB, Patient_Gender, Patient_Address, Patient_Date_Reg, Patient_Account, Patient_Password)
+VALUES 
+('PA_0000001', 'Nam', 'Ngu', 'nam.ngu@gmail.com', '0988012301', '1977-01-01', 'FEMALE','HANOI', '2021-05-01 00:00:00', 'namngu', md5('automatic')),
+('PA_0000002', 'Tua', 'Ngh', 'tua.ngh@gmail.com', '0988012302', '1984-01-01', 'MALE','HUE', '2021-05-02 00:00:00', 'tuangh', md5('secret')),
+('PA_0000003', 'Vui', 'Huy', 'vui.huy@gmail.com', '0988012303', '1980-01-01', 'FEMALE','DANANG', '2021-05-03 00:00:00', 'vuihuy', md5('secret')),
+('PA_0000004', 'Tho', 'Tha', 'tho.tha@gmail.com', '0988012304', '1990-01-01', 'MALE','NHATRANG', '2021-05-04 00:00:00', 'thotha', md5('secret')),
+('PA_0000005', 'Hai', 'Tin', 'hai.tin@gmail.com', '0988012305', '1974-01-01', 'FEMALE','HOCHIMINH', '2021-05-05 00:00:00', 'haitin', md5('secret')),
+('PA_0000006', 'Lai', 'Que', 'lai.que@gmail.com', '0988012306', '1973-01-01', 'MALE','CANTHO', '2021-05-06 00:00:00', 'laique', md5('secret')),
+('PA_0000007', 'Tru', 'Huo', 'tru.huo@gmail.com', '0988012307', '1974-01-01', 'FEMALE','HANOI', '2021-05-07 00:00:00', 'truhuo', md5('secret')),
+('PA_0000008', 'Nha', 'Xat', 'nha.xat@gmail.com', '0988012308', '1969-01-10', 'MALE','HUE', '2021-05-08 00:00:00', 'nhaxat', md5('secret')),
+('PA_0000009', 'Hie', 'Han', 'hie.han@gmail.com', '0988012309', '1985-01-10', 'FEMALE','DANANG', '2021-05-09 00:00:00', 'hiehan', md5('secret')),
+('PA_0000010', 'Dan', 'Quo', 'dan.quo@gmail.com', '0988012310', '1986-01-01', 'FEMALE','NHATRANG', '2021-05-10 00:00:00', 'danquo', md5('secret')),
+('PA_0000011', 'Tua', 'Myn', 'tua.myn@gmail.com', '0988012311', '1979-01-10', 'MALE','HOCHIMINH', '2021-05-11 00:00:00', 'tuamyn', md5('secret')),
+('PA_0000012', 'Kho', 'Duc', 'kho.duc@gmail.com', '0988012312', '1981-01-01', 'MALE','CANTHO', '2021-05-12 00:00:00', 'khoduc', md5('secret')),
+('PA_0000013', 'Lao', 'Ngo', 'lao.ngo@gmail.com', '0988012313', '1983-01-10', 'MALE','HOCHIMINH', '2021-05-13 00:00:00', 'laongo', md5('secret')),
+('PA_0000014', 'Bin', 'Tra', 'bin.tra@gmail.com', '0988012314', '1990-01-01', 'FEMALE','HANOI', '2021-05-14 00:00:00', 'bintra', md5('secret')),
+('PA_0000015', 'Nam10', 'Ngu', 'nam.ngu10@gmail.com', '0988012315', '1965-01-01', 'FEMALE','HANOI', '2021-05-15 00:00:00', 'namngu10', md5('automatic')),
+('PA_0000016', 'Tua11', 'Ngh', 'tua.ngh11@gmail.com', '0988012316', '1966-01-01', 'MALE','HOCHIMINH', '2021-05-16 00:00:00', 'tuangh11', md5('secret')),
+('PA_0000017', 'Vui12', 'Huy', 'vui.huy12@gmail.com', '0988012317', '1967-01-01', 'FEMALE','DANANG', '2021-05-17 00:00:00', 'vuihuy12', md5('secret')),
+('PA_0000018', 'Tho13', 'Tha', 'tho.tha13@gmail.com', '0988012318', '1968-01-01', 'MALE','NHATRANG', '2021-05-18 00:00:00', 'thotha13', md5('secret')),
+('PA_0000019', 'Hai14', 'Tin', 'hai.tin14@gmail.com', '0988012319', '1969-01-01', 'FEMALE','HOCHIMINH', '2021-05-19 00:00:00', 'haitin14', md5('secret')),
+('PA_0000020', 'Lai15', 'Que', 'lai.que15@gmail.com', '0988012320', '1970-01-01', 'MALE','CANTHO', '2021-05-20 00:00:00', 'laique15', md5('secret')),
+('PA_0000021', 'Tru16', 'Huo', 'tru.huo16@gmail.com', '0988012321', '1971-01-01', 'FEMALE','HANOI', '2021-05-21 00:00:00', 'truhuo16', md5('secret')),
+('PA_0000022', 'Nha17', 'Xat', 'nha.xat17@gmail.com', '0988012322', '1972-01-01', 'MALE','HUE', '2021-05-22 00:00:00', 'nhaxat17', md5('secret')),
+('PA_0000023', 'Hie18', 'Han', 'hie.han18@gmail.com', '0988012323', '1973-01-01', 'FEMALE','DANANG', '2021-05-23 00:00:00', 'hiehan18', md5('secret')),
+('PA_0000024', 'Dan19', 'Quo', 'dan.quo19@gmail.com', '0988012324', '1974-01-01', 'FEMALE','NHATRANG', '2021-06-19 00:00:00', 'danquo19', md5('secret')),
+('PA_0000025', 'Tua20', 'Myn', 'tua.myn20@gmail.com', '0988012325', '1975-01-01', 'MALE','HOCHIMINH', '2021-06-20 00:00:00', 'tuamyn20', md5('secret')),
+('PA_0000026', 'Kho21', 'Duc', 'kho.duc21@gmail.com', '0988012326', '1976-01-01', 'MALE','CANTHO', '2021-06-21 00:00:00', 'khoduc21', md5('secret')),
+('PA_0000027', 'Lao22', 'Ngo', 'lao.ngo22@gmail.com', '0988012327', '1977-01-01', 'MALE','HOCHIMINH', '2021-06-22 00:00:00', 'laongo22', md5('secret')),
+('PA_0000028', 'Bin23', 'Tra', 'bin.tra23@gmail.com', '0988012328', '1978-01-01', 'FEMALE','HANOI', '2021-06-23 00:00:00', 'bintra23', md5('secret')),
+('PA_0000029', 'Nam24', 'Ngu', 'nam.ngu24@gmail.com', '0988012329', '1979-01-01', 'FEMALE','HANOI', '2021-07-01 00:00:00', 'namngu24', md5('automatic')),
+('PA_0000030', 'Tua25', 'Ngh', 'tua.ngh25@gmail.com', '0988012330', '1980-01-01', 'MALE','HUE', '2021-07-02 00:00:00', 'tuangh25', md5('secret')),
+('PA_0000031', 'Vui26', 'Huy', 'vui.huy26@gmail.com', '0988012331', '1981-01-01', 'FEMALE','DANANG', '2021-07-03 00:00:00', 'vuihuy26', md5('secret')),
+('PA_0000032', 'Tho27', 'Tha', 'tho.tha27@gmail.com', '0988012332', '1982-01-01', 'MALE','HOCHIMINH', '2021-07-04 00:00:00', 'thotha27', md5('secret')),
+('PA_0000033', 'Hai28', 'Tin', 'hai.tin28@gmail.com', '0988012333', '1983-01-01', 'FEMALE','HOCHIMINH', '2021-07-05 00:00:00', 'haitin28', md5('secret')),
+('PA_0000034', 'Lai29', 'Que', 'lai.que29@gmail.com', '0988012334', '1984-01-01', 'MALE','CANTHO', '2021-07-06 00:00:00', 'laique29', md5('secret')),
+('PA_0000035', 'Tru30', 'Huo', 'tru.huo30@gmail.com', '0988012335', '1985-01-01', 'FEMALE','HANOI', '2021-07-07 00:00:00', 'truhuo30', md5('secret')),
+('PA_0000036', 'Nha31', 'Xat', 'nha.xat31@gmail.com', '0988012336', '1986-01-01', 'MALE','HUE', '2021-07-08 00:00:00', 'nhaxat31', md5('secret')),
+('PA_0000037', 'Hie32', 'Han', 'hie.han32@gmail.com', '0988012337', '1987-01-01', 'FEMALE','DANANG', '2021-07-09 00:00:00', 'hiehan32', md5('secret')),
+('PA_0000038', 'Dan33', 'Quo', 'dan.quo33@gmail.com', '0988012338', '1988-01-01', 'FEMALE','NHATRANG', '2021-07-10 00:00:00', 'danquo33', md5('secret')),
+('PA_0000039', 'Tua34', 'Myn', 'tua.myn34@gmail.com', '0988012339', '1989-01-01', 'MALE','HOCHIMINH', '2021-07-11 00:00:00', 'tuamyn34', md5('secret')),
+('PA_0000040', 'Kho35', 'Duc', 'kho.duc35@gmail.com', '0988012340', '1990-01-01', 'MALE','CANTHO', '2021-07-12 00:00:00', 'khoduc35', md5('secret')),
+('PA_0000041', 'Lao36', 'Ngo', 'lao.ngo36@gmail.com', '0988012341', '1983-01-01', 'MALE','HOCHIMINH', '2021-07-13 00:00:00', 'laongo36', md5('secret')),
+('PA_0000042', 'Bin37', 'Tra', 'bin.tra37@gmail.com', '0988012342', '1990-01-01', 'FEMALE','HANOI', '2021-07-14 00:00:00', 'bintra37', md5('secret')),
+('PA_0000043', 'Nam38', 'Ngu', 'nam.ngu38@gmail.com', '0988012343', '1977-01-01', 'FEMALE','HANOI', '2021-07-15 00:00:00', 'namngu38', md5('automatic')),
+('PA_0000044', 'Tua39', 'Ngh', 'tua.ngh39@gmail.com', '0988012344', '1984-01-01', 'MALE','HUE', '2021-07-16 00:00:00', 'tuangh39', md5('secret')),
+('PA_0000045', 'Vui40', 'Huy', 'vui.huy40@gmail.com', '0988012345', '1980-01-01', 'FEMALE','DANANG', '2021-07-17 00:00:00', 'vuihuy40', md5('secret')),
+('PA_0000046', 'Tho41', 'Tha', 'tho.tha41@gmail.com', '0988012346', '1990-01-01', 'MALE','NHATRANG', '2021-07-18 00:00:00', 'thotha41', md5('secret')),
+('PA_0000047', 'Hai42', 'Tin', 'hai.tin42@gmail.com', '0988012347', '1974-01-01', 'FEMALE','HOCHIMINH', '2021-07-19 00:00:00', 'haitin42', md5('secret')),
+('PA_0000048', 'Lai43', 'Que', 'lai.que43@gmail.com', '0988012348', '1973-01-01', 'MALE','HOCHIMINH', '2021-07-20 00:00:00', 'laique43', md5('secret')),
+('PA_0000049', 'Tru44', 'Huo', 'tru.huo44@gmail.com', '0988012349', '1974-01-01', 'FEMALE','HANOI', '2021-07-21 00:00:00', 'truhuo44', md5('secret')),
+('PA_0000050', 'Nha45', 'Xat', 'nha.xat45@gmail.com', '0988012350', '1969-01-01', 'MALE','HUE', '2021-07-22 00:00:00', 'nhaxat45', md5('secret')),
+('PA_0000051', 'Hie46', 'Han', 'hie.han46@gmail.com', '0988012351', '1985-01-10', 'FEMALE','DANANG', '2021-07-23 00:00:00', 'hiehan46', md5('secret')),
+('PA_0000052', 'Dan47', 'Quo', 'dan.quo47@gmail.com', '0988012352', '1986-01-01', 'FEMALE','NHATRANG', '2021-08-01 00:00:00', 'danquo47', md5('secret')),
+('PA_0000053', 'Tua48', 'Myn', 'tua.myn48@gmail.com', '0988012353', '1979-01-01', 'MALE','HOCHIMINH', '2021-08-02 00:00:00', 'tuamyn48', md5('secret')),
+('PA_0000054', 'Kho49', 'Duc', 'kho.duc49@gmail.com', '0988012354', '1981-01-01', 'MALE','CANTHO', '2021-08-03 00:00:00', 'khoduc49', md5('secret')),
+('PA_0000055', 'Lao50', 'Ngo', 'lao.ngo50@gmail.com', '0988012355', '1983-01-01', 'MALE','HOCHIMINH', '2021-08-04 00:00:00', 'laongo50', md5('secret')),
+('PA_0000056', 'Bin51', 'Tra', 'bin.tra51@gmail.com', '0988012356', '1990-01-01', 'FEMALE','HANOI', '2021-08-05 00:00:00', 'bintra51', md5('secret')),
+('PA_0000057', 'Nam52', 'Ngu', 'nam.ngu52@gmail.com', '0988012357', '1977-01-01', 'FEMALE','HANOI', '2021-09-01 00:00:00', 'namngu52', md5('automatic')),
+('PA_0000058', 'Tua53', 'Ngh', 'tua.ngh53@gmail.com', '0988012358', '1984-01-01', 'MALE','HUE', '2021-09-02 00:00:00', 'tuangh53', md5('secret')),
+('PA_0000059', 'Vui54', 'Huy', 'vui.huy54@gmail.com', '0988012359', '1980-01-01', 'FEMALE','DANANG', '2021-09-03 00:00:00', 'vuihuy54', md5('secret')),
+('PA_0000060', 'Tho55', 'Tha', 'tho.tha55@gmail.com', '0988012360', '1990-01-01', 'MALE','NHATRANG', '2021-10-01 00:00:00', 'thotha55', md5('secret')),
+('PA_0000061', 'Thz56', 'Tha', 'thz.tha56@gmail.com', '0988012361', '1989-01-01', 'MALE','HOCHIMINH', '2021-10-15 00:00:00', 'thZtha56', md5('secret'))
+;
+SELECT * FROM H4U.PATIENT;
+
+INSERT INTO H4U.PATIENT
+(Patient_ID, Patient_Fname, Patient_Lname, Patient_Email_ID, Patient_Phone, Patient_DoB, Patient_Gender, Patient_Address, Patient_Date_Reg, Patient_Account, Patient_Password)
+VALUES 
+('PA_0000062', 'Jack', 'Jill', 'jack.jill@gmail.com', '0988012362', '1977-01-01', 'MALE','HOCHIMINH', '2021-10-01', 'jackjill', md5('automatic'))
+;
+SELECT * FROM H4U.PATIENT;
+
+-- Insert the details of new appointments.
+SELECT * FROM H4U.APPOINTMENT;
+INSERT INTO H4U.APPOINTMENT 
+(Appointment_ID, Appointment_Reg_D, Appointment_Date, Appointment_Time, Appointment_Status, Appointment_Update_D, Doctor_id, Patient_id) 
+VALUES 
+('AP_0000001', '2021-05-01 00:00:00', '2021-05-02', '08:30:00', 'DONE', '2021-05-02', 'DOC_000001', 'PA_0000001'),
+('AP_0000002', '2021-07-01 00:00:00', '2021-07-02', '10:30:00', 'DONE', '2021-07-02', 'DOC_000001', 'PA_0000002'),
+('AP_0000003', '2021-11-05 00:00:00', '2021-11-06', '10:30:00', 'ONPROGRESS', '2021-11-05','DOC_000001', 'PA_0000003'),
+('AP_0000004', '2021-07-16 00:00:00', '2021-07-16', '10:30:00', 'DONE', '2021-07-16', 'DOC_000002', 'PA_0000004'),
+('AP_0000005', '2021-08-10 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000002', 'PA_0000005'),
+('AP_0000006', '2021-09-16 00:00:00', '2021-09-16', '10:30:00', 'DONE', '2021-09-16', 'DOC_000002', 'PA_0000006'),
+('AP_0000007', '2021-07-17 00:00:00', '2021-07-17', '10:30:00', 'DONE', '2021-07-17', 'DOC_000003', 'PA_0000007'),
+('AP_0000008', '2021-08-17 00:00:00', '2021-08-17', '10:30:00', 'DONE', '2021-08-17', 'DOC_000003', 'PA_0000008'),
+('AP_0000009', '2021-09-17 00:00:00', '2021-09-17', '10:30:00', 'DONE', '2021-09-17', 'DOC_000003', 'PA_0000009'),
+('AP_0000010', '2021-08-18 00:00:00', '2021-08-18', '08:30:00', 'DONE', '2021-08-18', 'DOC_000004', 'PA_0000010'),
+('AP_0000011', '2021-08-18 00:00:00', '2021-08-18', '09:30:00', 'DONE', '2021-08-18', 'DOC_000004', 'PA_0000011'),
+('AP_0000012', '2021-08-18 00:00:00', '2021-08-18', '10:30:00', 'DONE', '2021-08-18', 'DOC_000004', 'PA_0000012'),
+('AP_0000013', '2021-06-16 00:00:00', '2021-06-16', '14:30:00', 'DONE', '2021-06-16', 'DOC_000005', 'PA_0000013'),
+('AP_0000014', '2021-08-16 00:00:00', '2021-08-16', '14:30:00', 'DONE', '2021-08-16', 'DOC_000005', 'PA_0000014'),
+('AP_0000015', '2021-10-01 00:00:00', '2021-10-01', '14:30:00', 'DONE', '2021-10-01', 'DOC_000005', 'PA_0000015'),
+('AP_0000016', '2021-06-19 00:00:00', '2021-06-19', '10:30:00', 'DONE', '2021-06-19', 'DOC_000006', 'PA_0000016'),
+('AP_0000017', '2021-06-20 00:00:00', '2021-06-20', '11:30:00', 'DONE', '2021-06-20', 'DOC_000006', 'PA_0000017'),
+('AP_0000018', '2021-07-21 00:00:00', '2021-07-21', '10:30:00', 'DONE', '2021-07-21', 'DOC_000006', 'PA_0000018'),
+('AP_0000019', '2021-07-21 00:00:00', '2021-07-21', '14:30:00', 'DONE', '2021-07-21', 'DOC_000007', 'PA_0000019'),
+('AP_0000020', '2021-07-21 00:00:00', '2021-07-21', '15:30:00', 'DONE', '2021-07-21', 'DOC_000007', 'PA_0000020'),
+('AP_0000021', '2021-07-21 00:00:00', '2021-07-21', '16:30:00', 'DONE', '2021-07-21', 'DOC_000007', 'PA_0000021'),
+('AP_0000022', '2021-05-10 00:00:00', '2021-05-10', '10:30:00', 'CANCEL', '2021-05-08', 'DOC_000008', 'PA_0000022'),
+('AP_0000023', '2021-06-12 00:00:00', '2021-06-12', '09:30:00', 'DONE', '2021-06-12', 'DOC_000008', 'PA_0000023'),
+('AP_0000024', '2021-07-18 00:00:00', '2021-07-18', '10:30:00', 'DONE', '2021-07-18', 'DOC_000008', 'PA_0000024'),
+('AP_0000025', '2021-09-16 00:00:00', '2021-09-16', '09:00:00', 'DONE', '2021-09-16', 'DOC_000009', 'PA_0000025'),
+('AP_0000026', '2021-09-16 00:00:00', '2021-09-16', '10:00:00', 'DONE', '2021-09-16', 'DOC_000009', 'PA_0000026'),
+('AP_0000027', '2021-09-02 00:00:00', '2021-09-02', '11:00:00', 'DONE', '2021-09-02', 'DOC_000009', 'PA_0000027'),
+('AP_0000028', '2021-05-03 00:00:00', '2021-05-03', '10:30:00', 'DONE', '2021-05-03', 'DOC_000010', 'PA_0000028'),
+('AP_0000029', '2021-06-04 00:00:00', '2021-06-04', '10:30:00', 'DONE', '2021-06-04', 'DOC_000010', 'PA_0000029'),
+('AP_0000030', '2021-06-16 00:00:00', '2021-06-16', '10:30:00', 'DONE', '2021-06-16', 'DOC_000010', 'PA_0000030'),
+('AP_0000031', '2021-08-16 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000011', 'PA_0000031'),
+('AP_0000032', '2021-08-16 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000011', 'PA_0000032'),
+('AP_0000033', '2021-07-16 00:00:00', '2021-07-16', '09:30:00', 'DONE', '2021-07-16', 'DOC_000011', 'PA_0000033'),
+('AP_0000034', '2021-07-16 00:00:00', '2021-07-16', '10:30:00', 'DONE', '2021-07-16', 'DOC_000011', 'PA_0000034'),
+('AP_0000035', '2021-09-16 00:00:00', '2021-09-16', '11:30:00', 'DONE', '2021-09-16', 'DOC_000011', 'PA_0000035'),
+('AP_0000036', '2021-09-07 00:00:00', '2021-09-16', '12:30:00', 'DONE', '2021-09-16', 'DOC_000011', 'PA_0000036'),
+('AP_0000037', '2021-09-16 00:00:00', '2021-09-16', '13:30:00', 'DONE', '2020-05-16', 'DOC_000011', 'PA_0000037'),
+('AP_0000038', '2021-09-16 00:00:00', '2021-09-16', '14:30:00', 'DONE', '2021-09-16', 'DOC_000011', 'PA_0000038'),
+('AP_0000039', '2021-09-06 00:00:00', '2021-09-16', '15:30:00', 'CANCEL', '2021-09-16', 'DOC_000011', 'PA_0000039'),
+('AP_0000040', '2021-09-16 00:00:00', '2021-09-16', '16:30:00', 'DONE', '2021-09-16', 'DOC_000012', 'PA_0000040'),
+('AP_0000041', '2021-09-16 00:00:00', '2021-09-16', '08:30:00', 'DONE', '2021-09-16', 'DOC_000012', 'PA_0000041'),
+('AP_0000042', '2021-09-16 00:00:00', '2021-09-16', '09:30:00', 'DONE', '2021-09-16', 'DOC_000012', 'PA_0000042'),
+('AP_0000043', '2021-08-09 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000012', 'PA_0000043'),
+('AP_0000044', '2021-08-16 00:00:00', '2021-08-16', '11:30:00', 'DONE', '2021-08-16', 'DOC_000012', 'PA_0000044'),
+('AP_0000045', '2021-08-16 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000012', 'PA_0000045'),
+('AP_0000046', '2021-08-16 00:00:00', '2021-08-16', '13:30:00', 'DONE', '2021-08-16', 'DOC_000013', 'PA_0000046'),
+('AP_0000047', '2021-08-16 00:00:00', '2021-08-16', '14:30:00', 'DONE', '2021-08-16', 'DOC_000013', 'PA_0000047'),
+('AP_0000048', '2021-08-11 00:00:00', '2021-08-16', '15:30:00', 'DONE', '2021-08-16', 'DOC_000013', 'PA_0000048'),
+('AP_0000049', '2021-08-16 00:00:00', '2021-08-16', '16:30:00', 'DONE', '2020-05-16', 'DOC_000014', 'PA_0000049'),
+('AP_0000050', '2021-09-16 00:00:00', '2021-09-16', '10:30:00', 'DONE', '2020-05-16', 'DOC_000014', 'PA_0000050'),
+('AP_0000051', '2021-10-16 00:00:00', '2021-11-16', '10:30:00', 'ONPROGRESS', '2021-10-16','DOC_000014', 'PA_0000051'),
+('AP_0000052', '2021-08-16 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000015', 'PA_0000052'),
+('AP_0000053', '2021-08-14 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000016', 'PA_0000053'),
+('AP_0000054', '2021-08-15 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000017', 'PA_0000054'),
+('AP_0000055', '2021-12-16 00:00:00', '2021-12-16', '10:30:00', 'ONPROGRESS', '2021-12-16', 'DOC_000018', 'PA_0000055'),
+('AP_0000056', '2021-08-16 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000019', 'PA_0000056'),
+('AP_0000057', '2021-05-16 00:00:00', '2021-05-16', '10:30:00', 'DONE', '2021-05-16', 'DOC_000020', 'PA_0000057'),
+('AP_0000058', '2021-08-16 00:00:00', '2021-08-16', '10:30:00', 'DONE', '2021-08-16', 'DOC_000020', 'PA_0000058'),
+('AP_0000059', '2021-10-13 00:00:00', '2021-12-16', '10:30:00', 'ONPROGRESS', '2021-10-13', 'DOC_000020', 'PA_0000059'),
+('AP_0000060', '2021-10-16 00:00:00', '2021-11-16', '10:30:00', 'ONPROGRESS', '2021-10-16', 'DOC_000020', 'PA_0000060')
+;
+SELECT * FROM H4U.APPOINTMENT;
+
+-- Insert the details of new diagnosises.
+SELECT * FROM H4U.DIAGNOSIS;
+INSERT INTO `H4U`.`DIAGNOSIS` 
+(H_Case_ID, H_Image, H_Blood_Type, H_Current_Signs, H_Drug_Allergy, H_Pregnancy, H_Blood_Pressure, H_Heart_Rate, H_Temperature, H_Status, H_Other_Syms,H_Prescription_ID ,H_Prescription_Date ,H_Prescription_Cont, Appointment_id)
+VALUES 
+('C00001','/health/image/1.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00001','2021-05-02','Completed medical examination and consultation.', 'AP_0000001'),
+('C00002','/health/image/2.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00002','2021-10-25','Completed medical examination and consultation.', 'AP_0000002'),
+('C00003','/health/image/3.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00003','2021-10-25','Not Done', 'AP_0000003'),
+('C00004','/health/image/4.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00004','2021-10-25','Completed medical examination and consultation.', 'AP_0000004'),
+('C00005','/health/image/5.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00005','2021-10-25','Completed medical examination and consultation.', 'AP_0000005'),
+('C00006','/health/image/6.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00006','2021-10-25','Completed medical examination and consultation.', 'AP_0000006'),
+('C00007','/health/image/7.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00007','2021-10-25','Completed medical examination and consultation.', 'AP_0000007'),
+('C00008','/health/image/8.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00008','2021-10-25','Completed medical examination and consultation.', 'AP_0000008'),
+('C00009','/health/image/9.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00009','2021-10-25','Completed medical examination and consultation.', 'AP_0000009'),
+('C00010','/health/image/10.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00010','2021-10-25','Completed medical examination and consultation.', 'AP_0000010'),
+('C00011','/health/image/11.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00011','2021-10-25','Completed medical examination and consultation.', 'AP_0000011'),
+('C00012','/health/image/12.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00012','2021-10-25','Completed medical examination and consultation.', 'AP_0000012'),
+('C00013','/health/image/13.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00013','2021-10-25','Completed medical examination and consultation.', 'AP_0000013'),
+('C00014','/health/image/14.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00014','2021-10-25','Completed medical examination and consultation.', 'AP_0000014'),
+('C00015','/health/image/15.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00015','2021-10-25','Completed medical examination and consultation.', 'AP_0000015'),
+('C00016','/health/image/16.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00016','2021-10-25','Completed medical examination and consultation.', 'AP_0000016'),
+('C00017','/health/image/17.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00017','2021-10-25','Completed medical examination and consultation.', 'AP_0000017'),
+('C00018','/health/image/18.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00018','2021-10-25','Completed medical examination and consultation.', 'AP_0000018'),
+('C00019','/health/image/19.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00019','2021-10-25','Completed medical examination and consultation.', 'AP_0000019'),
+('C00020','/health/image/20.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00020','2021-10-25','Completed medical examination and consultation.', 'AP_0000020'),
+('C00021','/health/image/21.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00021','2021-10-25','Completed medical examination and consultation.', 'AP_0000021'),
+('C00022','/health/image/22.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00022','2021-10-25','Cancel.', 'AP_0000022'),
+('C00023','/health/image/23.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00023','2021-10-25','Completed medical examination and consultation.', 'AP_0000023'),
+('C00024','/health/image/24.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00024','2021-10-25','Completed medical examination and consultation.', 'AP_0000024'),
+('C00025','/health/image/25.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00025','2021-10-25','Completed medical examination and consultation.', 'AP_0000025'),
+('C00026','/health/image/26.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00026','2021-10-25','Completed medical examination and consultation.', 'AP_0000026'),
+('C00027','/health/image/27.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00027','2021-10-25','Completed medical examination and consultation.', 'AP_0000027'),
+('C00028','/health/image/28.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00028','2021-10-25','Completed medical examination and consultation.', 'AP_0000028'),
+('C00029','/health/image/29.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00029','2021-10-25','Completed medical examination and consultation.', 'AP_0000029'),
+('C00030','/health/image/30.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00030','2021-10-25','Completed medical examination and consultation.', 'AP_0000030'),
+('C00031','/health/image/31.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00031','2021-10-25','Completed medical examination and consultation.', 'AP_0000031'),
+('C00032','/health/image/32.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00032','2021-10-25','Completed medical examination and consultation.', 'AP_0000032'),
+('C00033','/health/image/33.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00033','2021-10-25','Completed medical examination and consultation.', 'AP_0000033'),
+('C00034','/health/image/34.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00034','2021-10-25','Completed medical examination and consultation.', 'AP_0000034'),
+('C00035','/health/image/35.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00035','2021-10-25','Completed medical examination and consultation.', 'AP_0000035'),
+('C00036','/health/image/36.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00036','2021-10-25','Completed medical examination and consultation.', 'AP_0000036'),
+('C00037','/health/image/37.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00037','2021-10-25','Completed medical examination and consultation.', 'AP_0000037'),
+('C00038','/health/image/38.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00038','2021-10-25','Completed medical examination and consultation.', 'AP_0000038'),
+('C00039','/health/image/39.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00039','2021-10-25','Cancel', 'AP_0000039'),
+('C00040','/health/image/40.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00040','2021-10-25','Completed medical examination and consultation.', 'AP_0000040'),
+('C00041','/health/image/41.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00041','2021-10-25','Completed medical examination and consultation.', 'AP_0000041'),
+('C00042','/health/image/42.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00042','2021-10-25','Completed medical examination and consultation.', 'AP_0000042'),
+('C00043','/health/image/43.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00043','2021-10-25','Completed medical examination and consultation.', 'AP_0000043'),
+('C00044','/health/image/44.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00044','2021-10-25','Completed medical examination and consultation.', 'AP_0000044'),
+('C00045','/health/image/45.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00045','2021-10-25','Completed medical examination and consultation.', 'AP_0000045'),
+('C00046','/health/image/46.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00046','2021-10-25','Completed medical examination and consultation.', 'AP_0000046'),
+('C00047','/health/image/47.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00047','2021-10-25','Completed medical examination and consultation.', 'AP_0000047'),
+('C00048','/health/image/48.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00048','2021-10-25','Completed medical examination and consultation.', 'AP_0000048'),
+('C00049','/health/image/49.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00049','2021-10-25','Completed medical examination and consultation.', 'AP_0000049'),
+('C00050','/health/image/50.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00050','2021-10-25','Completed medical examination and consultation.', 'AP_0000050'),
+('C00051','/health/image/51.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00051','2021-10-25','Not Done.', 'AP_0000051'),
+('C00052','/health/image/52.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00052','2021-10-25','Completed medical examination and consultation.', 'AP_0000052'),
+('C00053','/health/image/53.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00053','2021-10-25','Completed medical examination and consultation.', 'AP_0000053'),
+('C00054','/health/image/54.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00054','2021-10-25','Completed medical examination and consultation.', 'AP_0000054'),
+('C00055','/health/image/55.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00055','2021-10-25','Not Done.', 'AP_0000055'),
+('C00056','/health/image/56.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00056','2021-10-25','Completed medical examination and consultation.', 'AP_0000056'),
+('C00057','/health/image/57.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00057','2021-10-25','Completed medical examination and consultation.', 'AP_0000057'),
+('C00058','/health/image/58.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00058','2021-10-25','Completed medical examination and consultation.', 'AP_0000058'),
+('C00059','/health/image/59.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00059','2021-10-25','Not Done.', 'AP_0000059'),
+('C00060','/health/image/60.jpeg', 'A', 'breathlessness', 'NO', 'NO', '120/80', '80', '37', 'NORMAL', 'No', 'PRES_00060','2021-10-25','Not Done.', 'AP_0000060')
+;
+SELECT * FROM H4U.DIAGNOSIS;
+
+-- Insert the details of new bills.
+SELECT * FROM H4U.BILL;
+INSERT INTO H4U.BILL
+(Bill_ID, Payment_Date, Payment_Cont, Total_Cost, Appointment_id, Patient_id) 
+VALUES 
+('BILL_00001', '2021-05-02', 'Medical expenses.', 500, 'AP_0000001', 'PA_0000001'),
+('BILL_00002', '2021-07-02', 'Medical expenses.', 400, 'AP_0000002', 'PA_0000002'),
+('BILL_00003', '2021-07-16', 'Medical expenses.', 500, 'AP_0000004', 'PA_0000004'),
+('BILL_00004', '2021-08-16', 'Medical expenses.', 500, 'AP_0000005', 'PA_0000005'),
+('BILL_00005', '2021-08-16', 'Medical expenses.', 400, 'AP_0000006', 'PA_0000006'),
+('BILL_00006', '2021-09-16', 'Medical expenses.', 400, 'AP_0000007', 'PA_0000007'),
+('BILL_00007', '2021-07-17', 'Medical expenses.', 400, 'AP_0000008', 'PA_0000008'),
+('BILL_00008', '2021-08-17', 'Medical expenses.', 500, 'AP_0000009', 'PA_0000009'),
+('BILL_00009', '2021-09-17', 'Medical expenses.', 500, 'AP_0000010', 'PA_0000010'),
+('BILL_00010', '2021-08-18', 'Medical expenses.', 500, 'AP_0000011', 'PA_0000011'),
+('BILL_00011', '2021-08-18', 'Medical expenses.', 500, 'AP_0000012', 'PA_0000012'),
+('BILL_00012', '2021-08-18', 'Medical expenses.', 500, 'AP_0000013', 'PA_0000013'),
+('BILL_00013', '2021-06-16', 'Medical expenses.', 400, 'AP_0000014', 'PA_0000014'),
+('BILL_00014', '2021-08-16', 'Medical expenses.', 500, 'AP_0000015', 'PA_0000015'),
+('BILL_00015', '2021-10-01', 'Medical expenses.', 400, 'AP_0000016', 'PA_0000016'),
+('BILL_00016', '2021-06-19', 'Medical expenses.', 500, 'AP_0000017', 'PA_0000017'),
+('BILL_00017', '2021-06-20', 'Medical expenses.', 400, 'AP_0000018', 'PA_0000018'),
+('BILL_00018', '2021-07-21', 'Medical expenses.', 500, 'AP_0000019', 'PA_0000019'),
+('BILL_00019', '2021-07-21', 'Medical expenses.', 500, 'AP_0000020', 'PA_0000020'),
+('BILL_00020', '2021-07-21', 'Medical expenses.', 500, 'AP_0000021', 'PA_0000021'),
+('BILL_00021', '2021-05-08', 'Medical expenses.', 400, 'AP_0000023', 'PA_0000023'),
+('BILL_00022', '2021-06-12', 'Medical expenses.', 500, 'AP_0000024', 'PA_0000024'),
+('BILL_00023', '2021-07-18', 'Medical expenses.', 500, 'AP_0000025', 'PA_0000025'),
+('BILL_00024', '2021-09-16', 'Medical expenses.', 500, 'AP_0000026', 'PA_0000026'),
+('BILL_00025', '2021-09-02', 'Medical expenses.', 400, 'AP_0000027', 'PA_0000027'),
+('BILL_00026', '2021-09-16', 'Medical expenses.', 500, 'AP_0000028', 'PA_0000028'),
+('BILL_00027', '2021-05-03', 'Medical expenses.', 500, 'AP_0000029', 'PA_0000029'),
+('BILL_00028', '2021-06-04', 'Medical expenses.', 500, 'AP_0000030', 'PA_0000030'),
+('BILL_00029', '2021-06-16', 'Medical expenses.', 400, 'AP_0000031', 'PA_0000031'),
+('BILL_00030', '2021-08-16', 'Medical expenses.', 500, 'AP_0000032', 'PA_0000032'),
+('BILL_00031', '2021-08-16', 'Medical expenses.', 500, 'AP_0000033', 'PA_0000033'),
+('BILL_00032', '2021-07-16', 'Medical expenses.', 500, 'AP_0000034', 'PA_0000034'),
+('BILL_00033', '2021-07-16', 'Medical expenses.', 500, 'AP_0000035', 'PA_0000035'),
+('BILL_00034', '2021-09-16', 'Medical expenses.', 500, 'AP_0000036', 'PA_0000036'),
+('BILL_00035', '2021-09-16', 'Medical expenses.', 400, 'AP_0000037', 'PA_0000037'),
+('BILL_00036', '2020-05-16', 'Medical expenses.', 500, 'AP_0000038', 'PA_0000038'),
+('BILL_00037', '2021-09-16', 'Medical expenses.', 500, 'AP_0000040', 'PA_0000040'),
+('BILL_00038', '2021-09-16', 'Medical expenses.', 500, 'AP_0000041', 'PA_0000041'),
+('BILL_00039', '2021-09-16', 'Medical expenses.', 500, 'AP_0000042', 'PA_0000042'),
+('BILL_00040', '2021-09-16', 'Medical expenses.', 400, 'AP_0000043', 'PA_0000043'),
+('BILL_00041', '2021-08-16', 'Medical expenses.', 500, 'AP_0000044', 'PA_0000044'),
+('BILL_00042', '2021-08-16', 'Medical expenses.', 500, 'AP_0000045', 'PA_0000045'),
+('BILL_00043', '2021-08-16', 'Medical expenses.', 500, 'AP_0000046', 'PA_0000046'),
+('BILL_00044', '2021-08-16', 'Medical expenses.', 400, 'AP_0000047', 'PA_0000047'),
+('BILL_00045', '2021-08-16', 'Medical expenses.', 500, 'AP_0000048', 'PA_0000048'),
+('BILL_00046', '2021-08-16', 'Medical expenses.', 500, 'AP_0000049', 'PA_0000049'),
+('BILL_00047', '2020-05-16', 'Medical expenses.', 500, 'AP_0000050', 'PA_0000050'),
+('BILL_00048', '2020-05-16', 'Medical expenses.', 500, 'AP_0000052', 'PA_0000052'),
+('BILL_00049', '2021-08-16', 'Medical expenses.', 400, 'AP_0000053', 'PA_0000053'),
+('BILL_00050', '2021-08-16', 'Medical expenses.', 500, 'AP_0000054', 'PA_0000054'),
+('BILL_00051', '2021-08-16', 'Medical expenses.', 500, 'AP_0000056', 'PA_0000056'),
+('BILL_00052', '2021-08-16', 'Medical expenses.', 400, 'AP_0000057', 'PA_0000057'),
+('BILL_00053', '2021-05-16', 'Medical expenses.', 500, 'AP_0000058', 'PA_0000058')
+;
+SELECT * FROM H4U.BILL;
+
+-- Insert the details of new feedbacks.
+SELECT * FROM H4U.REVIEW;
+INSERT INTO H4U.REVIEW
+(Review_Date, Review_Comment, Review_Rating, Appointment_id, Patient_id) 
+VALUES 
+('2021-05-02', 'Medium', '5', 'AP_0000001', 'PA_0000001'),
+('2021-07-02', 'Normal', '4', 'AP_0000002', 'PA_0000002'),
+('2021-07-16', 'Wonderful', '8', 'AP_0000004', 'PA_0000004'),
+('2021-08-16', 'Perfect', '9', 'AP_0000005', 'PA_0000005'),
+('2021-09-16', 'Bad', '4', 'AP_0000006', 'PA_0000006'),
+('2021-07-17', 'Medium', '4', 'AP_0000007', 'PA_0000007'),
+('2021-08-17', 'Normal', '4', 'AP_0000008', 'PA_0000008'),
+('2021-09-17', 'Good', '8', 'AP_0000009', 'PA_0000009'),
+('2021-08-18', 'Wonderful', '9', 'AP_0000010', 'PA_0000010'),
+('2021-08-18', 'Perfect', '10', 'AP_0000011', 'PA_0000011'),
+('2021-08-18', 'Bad', '3', 'AP_0000012', 'PA_0000012'),
+('2021-06-16', 'Very Bad', '2', 'AP_0000013', 'PA_0000013'),
+('2021-08-16', 'Bad', '3', 'AP_0000014', 'PA_0000014'),
+('2021-10-01', 'Medium', '6', 'AP_0000015', 'PA_0000015'),
+('2021-06-19', 'Medium', '5', 'AP_0000016', 'PA_0000016'),
+('2021-06-20', 'Medium', '5', 'AP_0000017', 'PA_0000017'),
+('2021-07-21', 'Medium', '4', 'AP_0000018', 'PA_0000018'),
+('2021-07-21', 'Normal', '4', 'AP_0000019', 'PA_0000019'),
+('2021-07-21', 'Normal', '5', 'AP_0000020', 'PA_0000020'),
+('2021-05-08', 'Normal', '4', 'AP_0000021', 'PA_0000021'),
+('2021-07-18', 'Normal', '5', 'AP_0000023', 'PA_0000023'),
+('2021-09-16', 'Normal', '4', 'AP_0000024', 'PA_0000024'),
+('2021-09-16', 'Good', '7', 'AP_0000025', 'PA_0000025'),
+('2021-09-02', 'Good', '7', 'AP_0000026', 'PA_0000026'),
+('2021-05-03', 'Good', '7', 'AP_0000027', 'PA_0000027'),
+('2021-06-04', 'Good', '7', 'AP_0000028', 'PA_0000028'),
+('2021-06-16', 'Good', '8', 'AP_0000029', 'PA_0000029'),
+('2021-08-16', 'Good', '7', 'AP_0000030', 'PA_0000030'),
+('2021-08-16', 'Wonderful', '9', 'AP_0000031', 'PA_0000031'),
+('2021-07-16', 'Wonderful', '8', 'AP_0000032', 'PA_0000032'),
+('2021-07-16', 'Wonderful', '9', 'AP_0000033', 'PA_0000033'),
+('2021-09-16', 'Wonderful', '8', 'AP_0000034', 'PA_0000034'),
+('2021-09-16', 'Wonderful', '9', 'AP_0000035', 'PA_0000035'),
+('2020-05-16', 'Wonderful', '9', 'AP_0000036', 'PA_0000036'),
+('2021-09-16', 'Perfect', '10', 'AP_0000037', 'PA_0000037'),
+('2021-09-16', 'Perfect', '10', 'AP_0000038', 'PA_0000038'),
+('2021-09-16', 'Perfect', '9', 'AP_0000040', 'PA_0000040'),
+('2021-09-16', 'Perfect', '9', 'AP_0000041', 'PA_0000041'),
+('2021-08-16', 'Medium', '6', 'AP_0000042', 'PA_0000042'),
+('2021-08-16', 'Medium', '6', 'AP_0000043', 'PA_0000043'),
+('2021-08-16', 'Medium', '6', 'AP_0000044', 'PA_0000044'),
+('2021-08-16', 'Medium', '6', 'AP_0000045', 'PA_0000045'),
+('2021-08-16', 'Medium', '6', 'AP_0000046', 'PA_0000046'),
+('2021-08-16', 'Medium', '6', 'AP_0000047', 'PA_0000047'),
+('2020-05-16', 'Medium', '6', 'AP_0000048', 'PA_0000048'),
+('2020-05-16', 'Medium', '6', 'AP_0000049', 'PA_0000049'),
+('2021-08-16','Medium', '6', 'AP_0000050', 'PA_0000050'),
+('2021-08-16', 'Good', '7', 'AP_0000052', 'PA_0000052'),
+('2021-08-16', 'Good', '7', 'AP_0000053', 'PA_0000053'),
+('2021-08-16', 'Good', '7', 'AP_0000054', 'PA_0000054'),
+('2021-05-16', 'Good', '7', 'AP_0000056', 'PA_0000056'),
+('2021-08-16', 'Good', '7', 'AP_0000057', 'PA_0000057'),
+('2021-05-16', 'Good', '7', 'AP_0000058', 'PA_0000058')
+;
+SELECT * FROM H4U.REVIEW;
+
+-- Update doctor information.
+SELECT * FROM H4U.DOCTOR;
+UPDATE H4U.DOCTOR 
+SET Doctor_Education = 'PH.D' 
+WHERE Doctor_ID = 'DOC_000001';
+SELECT * FROM H4U.DOCTOR;
+
+-- ****************************************************************************************************************
+-- *                                    DATA INQUIRES AND REPORT                                                  *  
+-- ****************************************************************************************************************
+ 
+-- REPORT #1 : Total number of registered customer accounts.
+SELECT COUNT(Patient_ID) AS TOTAL_NUMBER_PATIENT
+FROM H4U.PATIENT;
+
+-- REPORT #2: Total number of female accounts and total number of male accounts. 
+SELECT 
+(SELECT COUNT(Patient_ID) FROM H4U.PATIENT WHERE Patient_gender = 'FEMALE') AS TOTAL_NUMBER_PATIENT_BY_FEMALE,
+(SELECT COUNT(Patient_ID) FROM H4U.PATIENT WHERE Patient_gender = 'MALE') AS TOTAL_NUMBER_PATIENT_BY_MALE;
+
+-- REPORT #3: Which living area has the most number of registered customer accounts? 
+SELECT Patient_Address AS AREA, COUNT(Patient_Address) AS NUMBER_OF_PATIENT
+FROM H4U.PATIENT
+GROUP BY Patient_Address
+ORDER BY COUNT(Patient_Address) DESC
+LIMIT 1;
+
+-- REPORT #4: Number of new accounts customer registered monthly AND compare with last month.
+SELECT INPUT_OF_MAIN_SELECT.*, (NEW_PATIENT_MONTH - PATIENT_LAST_MONTH) AS PATIENT_CHANGE, 
+CONCAT((ROUND(((NEW_PATIENT_MONTH - PATIENT_LAST_MONTH)/PATIENT_LAST_MONTH)*100,2)),'%') AS CHANGE_RATE
+FROM 
+	(SELECT T3.MONTH, T3.NEW_PATIENT_MONTH, T4.NEW_PATIENT_MONTH AS PATIENT_LAST_MONTH 
+	  FROM 
+			(SELECT T1.*, (T2.MONTH-1) AS LAST_MTH 
+			 FROM (SELECT MONTH(Patient_Date_Reg) AS MONTH, COUNT(Patient_ID) AS NEW_PATIENT_MONTH
+				   FROM H4U.PATIENT GROUP BY MONTH(Patient_Date_Reg) ORDER BY MONTH(Patient_Date_Reg)) AS T1
+			 LEFT JOIN 
+				   (SELECT month(Patient_Date_Reg) AS MONTH, COUNT(Patient_ID) AS NEW_PATIENT_MONTH
+					FROM H4U.PATIENT GROUP BY MONTH(Patient_Date_Reg) ORDER BY MONTH(Patient_Date_Reg)) AS T2 ON T1.MONTH = T2.MONTH) AS T3
+			 LEFT JOIN 
+					(SELECT MONTH(Patient_Date_Reg) AS MONTH, COUNT(Patient_ID) AS NEW_PATIENT_MONTH
+					 FROM H4U.PATIENT GROUP BY MONTH(Patient_Date_Reg) ORDER BY MONTH(Patient_Date_Reg)) AS T4 ON T3.LAST_MTH = T4.MONTH) AS INPUT_OF_MAIN_SELECT;
+
+-- REPORT #5: Total number of registered doctor accounts. 
+SELECT * FROM H4U.DOCTOR;
+SELECT COUNT(Doctor_ID) AS TOTAL_OF_DOCTOR FROM H4U.DOCTOR;
+ 
+-- REPORT #6: Total number of Ph.D, Master and Bachelor degrees. 
+SELECT TOTAL_BACHELOR, TOTAL_MASTER, TOTAL_PHD 
+FROM(
+	SELECT (SELECT COUNT(Doctor_ID) FROM H4U.DOCTOR WHERE Doctor_Education = 'BACHELOR' ) AS TOTAL_BACHELOR,
+		   (SELECT COUNT(Doctor_ID) FROM H4U.DOCTOR WHERE Doctor_Education = 'MASTER' ) AS TOTAL_MASTER,
+           (SELECT COUNT(Doctor_ID) FROM H4U.DOCTOR WHERE Doctor_Education = 'PH.D' ) AS TOTAL_PHD ) AS INPUT_OF_MAIN
+       ;
+
+-- REPORT #7: Number of new doctor accounts registered monthly.
+  -- Method 1:   
+SELECT MONTH(Doctor_Date_Reg) AS MONTH, COUNT(Doctor_ID) AS Total_Doctor_Registration_Monthly
+FROM H4U.DOCTOR
+GROUP BY MONTH(Doctor_Date_Reg);
+
+  -- Method 2:
+DROP TABLE H4U.DOCTOR_CHANGE;
+SET @ROW_NUMBER = 0;
+CREATE TABLE H4U.DOCTOR_CHANGE AS 
+SELECT t3.*, (@ROW_NUMBER := @ROW_NUMBER + 1) AS NUM
+FROM (SELECT t1.*,(T2.MONTH-1) AS LAST_MTH 
+      FROM (SELECT MONTH(Doctor_Date_Reg) AS MONTH, COUNT(Doctor_ID) AS NEW_DOCTOR_MONTH
+		    FROM H4U.DOCTOR GROUP BY MONTH(Doctor_Date_Reg) ORDER BY MONTH(Doctor_Date_Reg)) AS t1
+	        LEFT JOIN 
+			(SELECT MONTH(Doctor_Date_Reg) AS MONTH, COUNT(Doctor_ID) AS NEW_DOCTOR_MONTH
+			FROM H4U.DOCTOR GROUP BY MONTH(Doctor_Date_Reg) order by month(Doctor_Date_Reg)) t2 ON T1.MONTH = T2.MONTH)t3 order by T3.MONTH
+;
+SELECT * FROM H4U.DOCTOR_CHANGE;
+DROP TABLE H4U.DOCTOR_CHANGE_2;
+CREATE TABLE H4U.DOCTOR_CHANGE_2 AS
+SELECT T3.MONTH, T3.NEW_DOCTOR_MONTH,T4.NEW_DOCTOR_MONTH AS DOCTOR_LAST_MONTH
+FROM (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.NEW_DOCTOR_MONTH AS DOCTOR_LAST_MTH
+	  FROM H4U.DOCTOR_CHANGE t1 LEFT JOIN H4U.DOCTOR_CHANGE t2 ON T1.MONTH = T2.MONTH) AS T3
+	  LEFT JOIN (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.NEW_DOCTOR_MONTH AS DOCTOR_LAST_MTH FROM H4U.DOCTOR_CHANGE t1 
+	  LEFT JOIN H4U.DOCTOR_CHANGE t2 ON T1.MONTH = T2.MONTH)T4 ON T3.LAST_NUM = T4.NUM
+;
+SELECT * FROM H4U.DOCTOR_CHANGE_2;
+SELECT A.*, (NEW_DOCTOR_MONTH - DOCTOR_LAST_MONTH) AS DOCTOR_CHANGE, 
+CONCAT((ROUND(((NEW_DOCTOR_MONTH - DOCTOR_LAST_MONTH)/DOCTOR_LAST_MONTH)*100,2)),'%') AS CHANGE_RATE
+FROM H4U.DOCTOR_CHANGE_2 A;
+
+-- REPORT #8 : Total number of online appointments registered for medical examination monthly.
+SELECT MONTH(Appointment_Date) AS MONTH, COUNT(Appointment_ID) AS Total_Appointment_Registration_Monthly
+FROM H4U.APPOINTMENT
+GROUP BY MONTH(Appointment_Date)
+ORDER BY Appointment_Date DESC;
+
+-- REPORT #9 : Number of online appointments that have been successfully registered for medical examination, participated in medical examination and did not attend.
+  -- Method 1: 
+SELECT Patient_Appointment_Attended, Patient_Appointment_NOT_Attended, Patient_Appointment_On_Progress
+FROM  
+	(SELECT (SELECT COUNT(Appointment_ID) 
+	FROM H4U.Appointment
+	GROUP BY Appointment_Status
+	HAVING Appointment_Status = 'DONE') AS Patient_Appointment_Attended,
+    (SELECT COUNT(Appointment_ID) 
+	FROM H4U.Appointment
+	GROUP BY Appointment_Status
+	HAVING Appointment_Status = 'CANCEL') AS Patient_Appointment_NOT_Attended,
+    (SELECT COUNT(Appointment_ID) 
+	FROM H4U.Appointment
+	GROUP BY Appointment_Status
+	HAVING Appointment_Status = 'ONPROGRESS') AS Patient_Appointment_On_Progress) AS INPUT_OF_MAIN;
+
+  -- Method 2: (Number of online appointments successfully registered for medical examination and participating customers)
+drop table H4U.appt_change;
+set @row_number = 0;
+create table H4U.appt_change as
+select t3.*, (@row_number:=@row_number + 1) AS num
+from (select t1.*,(T2.MONTH-1) AS LAST_MTH
+FROM
+(SELECT month(Appointment_reg_D) AS MONTH, COUNT(Appointment_ID) AS NEW_APPT_MONTH
+FROM H4U.Appointment GROUP BY MONTH(Appointment_reg_D) order by month(Appointment_reg_D)) t1
+LEFT JOIN 
+(SELECT month(Appointment_reg_D) AS MONTH, COUNT(Appointment_ID) AS NEW_APPT_MONTH
+FROM H4U.Appointment GROUP BY MONTH(Appointment_reg_D) order by month(Appointment_reg_D))t2
+ON T1.MONTH = T2.MONTH)t3 order by T3.MONTH
+;
+select * from H4U.appt_change;
+CREATE TABLE H4U.appt_change_2 AS
+SELECT T3.MONTH, T3.NEW_APPT_MONTH,T4.NEW_APPT_MONTH AS APPT_LAST_MONTH
+FROM (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.NEW_APPT_MONTH AS APPT_LAST_MTH
+FROM H4U.appt_change t1 
+LEFT JOIN 
+H4U.appt_change t2
+ON T1.MONTH = T2.MONTH)T3
+LEFT JOIN 
+(SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.NEW_APPT_MONTH AS APPT_LAST_MTH
+FROM H4U.appt_change t1 
+LEFT JOIN 
+H4U.appt_change t2
+ON T1.MONTH = T2.MONTH)T4
+ON T3.LAST_NUM = T4.NUM
+;
+SELECT * FROM H4U.appt_change_2;
+SELECT A.*, (NEW_APPT_MONTH - APPT_LAST_MONTH) AS APPT_CHANGE, 
+concat((round(((NEW_APPT_MONTH - APPT_LAST_MONTH)/APPT_LAST_MONTH)*100,2)),'%') AS CHANGE_RATE
+FROM H4U.appt_change_2 A;
+
+  -- Method 3: (The number of online appointments registered for medical examination successfully, but customers did not attend)
+SELECT * FROM H4U.APPOINTMENT;
+drop table H4U.appt_change;
+set @row_number = 0;
+create table H4U.appt_change as
+select t3.*, (@row_number:=@row_number + 1) AS NUM
+from (select t1.*,(T2.MONTH-1) AS LAST_MTH
+FROM
+(SELECT month(Appointment_reg_D) AS MONTH, COUNT(Appointment_ID) AS CANCEL_APPT_MONTH
+FROM H4U.Appointment where Appointment_Status LIKE '%CANCEL' GROUP BY MONTH(Appointment_reg_D) order by month(Appointment_reg_D)) t1
+LEFT JOIN 
+(SELECT month(Appointment_reg_D) AS MONTH, COUNT(Appointment_ID) AS CANCEL_APPT_MONTH
+FROM H4U.Appointment where Appointment_Status LIKE '%CANCEL' GROUP BY MONTH(Appointment_reg_D) order by month(Appointment_reg_D))t2
+ON T1.MONTH = T2.MONTH)t3 order by T3.MONTH
+;
+select * from H4U.appt_change;
+drop table H4U.appt_change_2;
+CREATE TABLE H4U.appt_change_2 AS
+SELECT T3.MONTH, T3.CANCEL_APPT_MONTH,T4.CANCEL_APPT_MONTH AS CANCEL_APPT_LAST_MONTH
+FROM (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.CANCEL_APPT_MONTH AS _CANCEL_APPT_LAST_MTH
+FROM H4U.appt_change t1 
+LEFT JOIN 
+H4U.appt_change t2
+ON T1.MONTH = T2.MONTH)T3
+LEFT JOIN 
+(SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.CANCEL_APPT_MONTH AS CANCEL_APPT_LAST_MTH
+FROM H4U.appt_change t1 
+LEFT JOIN 
+H4U.appt_change t2
+ON T1.MONTH = T2.MONTH)T4
+ON T3.LAST_NUM = T4.NUM
+;
+SELECT * FROM H4U.appt_change_2;
+SELECT A.*, (CANCEL_APPT_MONTH - CANCEL_APPT_LAST_MONTH) AS CANCEL_APPT_CHANGE, 
+concat((round(((CANCEL_APPT_MONTH - CANCEL_APPT_LAST_MONTH)/CANCEL_APPT_LAST_MONTH)*100,2)),'%') AS CHANGE_RATE
+FROM H4U.appt_change_2 A;
+  
+-- REPORT #10 : Total number of visits by the patient monthly.
+  -- Method 1:
+SELECT MONTH(Appointment_Update_D) AS MONTH, COUNT(Appointment_ID) AS Patient_Appointment_Attended 
+FROM H4U.Appointment
+GROUP BY MONTH(Appointment_Update_D), Appointment_Status
+HAVING Appointment_Status = 'DONE';
+
+  -- Method 2:
+SELECT * FROM H4U.APPOINTMENT;
+drop table H4U.appt_change;
+set @row_number = 0;
+create table H4U.appt_change as
+select t3.*, (@row_number:=@row_number + 1) AS num
+from (select t1.*,(T2.MONTH-1) AS LAST_MTH
+FROM
+(SELECT month(Appointment_reg_D) AS MONTH, COUNT(Appointment_ID) AS DONE_APPT_MONTH
+FROM H4U.Appointment where Appointment_Status LIKE '%DONE' GROUP BY MONTH(Appointment_reg_D) order by month(Appointment_reg_D)) t1
+LEFT JOIN 
+(SELECT month(Appointment_reg_D) AS MONTH, COUNT(Appointment_ID) AS DONE_APPT_MONTH
+FROM H4U.Appointment where Appointment_Status LIKE '%DONE' GROUP BY MONTH(Appointment_reg_D) order by month(Appointment_reg_D))t2
+ON T1.MONTH = T2.MONTH)t3 order by T3.MONTH
+;
+select * from H4U.appt_change;
+DROP TABLE H4U.appt_change_2;
+CREATE TABLE H4U.appt_change_2 AS
+SELECT T3.MONTH, T3.DONE_APPT_MONTH,T4.DONE_APPT_MONTH AS DONE_APPT_LAST_MONTH
+FROM (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.DONE_APPT_MONTH AS DONE_APPT_LAST_MTH
+FROM H4U.appt_change t1 
+LEFT JOIN 
+H4U.appt_change t2
+ON T1.MONTH = T2.MONTH)T3
+LEFT JOIN 
+(SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.DONE_APPT_MONTH AS DONE_APPT_LAST_MTH
+FROM H4U.appt_change t1 
+LEFT JOIN 
+H4U.appt_change t2
+ON T1.MONTH = T2.MONTH)T4
+ON T3.LAST_NUM = T4.NUM
+;
+SELECT * FROM H4U.appt_change_2;
+SELECT A.*, (DONE_APPT_MONTH - DONE_APPT_LAST_MONTH) AS APPT_CHANGE, 
+concat((round(((DONE_APPT_MONTH - DONE_APPT_LAST_MONTH)/DONE_APPT_LAST_MONTH)*100,2)),'%') AS CHANGE_RATE
+FROM H4U.appt_change_2 A;
+
+-- REPORT #11 : Total number of registered customer accounts but never registered for online examination. 
+SELECT COUNT(COALESCE(AP.Patient_id,0)) AS Patient_Not_Register_Examination
+FROM H4U.Patient PA LEFT JOIN H4U.Appointment AP ON PA.Patient_ID = AP.Patient_id
+WHERE AP.Patient_id IS NULL
+GROUP BY AP.Patient_id;
+
+-- REPORT #12 : Patient detail of registered customer accounts but never registered for online examination.
+SELECT PA.*
+FROM H4U.Patient PA LEFT JOIN H4U.Appointment AP ON PA.Patient_ID = AP.Patient_id
+WHERE AP.Patient_id IS NULL;
+
+-- REPORT #13 : Total number of customer feedback monthly.
+drop table H4U.review_change;
+set @row_number = 0;
+create table H4U.review_change as
+select t3.*, (@row_number:=@row_number + 1) AS num
+from (select t1.*,(T2.MONTH-1) AS LAST_MTH
+FROM
+(SELECT month(Review_Date) AS MONTH, COUNT(Review_ID) AS review_month
+FROM H4U.Review GROUP BY MONTH(Review_Date) order by month(Review_Date)) t1
+LEFT JOIN 
+(SELECT month(Review_Date) AS MONTH, COUNT(Review_ID) AS review_month
+FROM H4U.Review GROUP BY MONTH(Review_Date) order by month(Review_Date))t2
+ON T1.MONTH = T2.MONTH)t3 order by T3.MONTH;
+select * from H4U.review_change;
+DROP TABLE H4U.review_change_2;
+CREATE TABLE H4U.review_change_2 AS
+SELECT T3.MONTH, T3.review_month,T4.review_month AS review_last_mth
+FROM (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.review_month AS review_last_mth
+FROM H4U.review_change t1 
+LEFT JOIN 
+H4U.review_change t2
+ON T1.MONTH = T2.MONTH)T3
+LEFT JOIN 
+(SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.review_month AS review_last_mth
+FROM H4U.review_change t1 
+LEFT JOIN 
+H4U.review_change t2
+ON T1.MONTH = T2.MONTH)T4
+ON T3.LAST_NUM = T4.NUM
+;
+SELECT * FROM H4U.review_change_2;
+SELECT A.*, (review_month - review_last_mth) AS review_change, 
+concat((round(((review_month - review_last_mth)/review_last_mth)*100,2)),'%') AS CHANGE_RATE
+FROM H4U.review_change_2 A;
+ 
+-- REPORT #14 : List top 2 specialties that are most registered by patients monthly.
+  -- Method 1:
+SELECT DO.Doctor_Speciality, COUNT(AP.Patient_id) AS Total_Of_Patients
+FROM H4U.APPOINTMENT AP LEFT JOIN H4U.DOCTOR DO ON AP.Doctor_id = DO.Doctor_ID
+GROUP BY DO.Doctor_Speciality
+ORDER BY COUNT(AP.Patient_id) DESC
+LIMIT 2;
+
+  -- Method 2:
+select * from h4u.appointment;
+select * from h4u.doctor;
+select t5.* from (select t4.*, rank() over(partition by t4.month order by t4.total_reg desc) as rn
+from
+(select t3.month, t3.Doctor_Speciality, sum(t3.no_registered) as total_reg from
+(select t1.*, t2.Doctor_Speciality from 
+(select month(Appointment_Reg_D) as month, Doctor_id, count(Appointment_ID) as no_registered
+from h4u.appointment group by month(Appointment_Reg_D), Doctor_id 
+order by month(Appointment_Reg_D), count(Appointment_ID)) t1
+left join h4u.doctor t2 on t1.Doctor_id = t2.Doctor_ID) t3 group by t3.month, t3.Doctor_Speciality
+order by t3.month, sum(t3.no_registered) desc) t4)t5 where t5.rn in (1,2);
+
+-- REPORT #15 : List top 3 doctors with the most frequency of online medical examination and treatment. 
+  -- Method 1:
+SELECT CONCAT(DO.Doctor_Lname,' ',DO.Doctor_Fname) AS Full_Name_Of_Doctor, COUNT(AP.Patient_id) AS Total_Of_Patients
+FROM H4U.APPOINTMENT AP LEFT JOIN H4U.DOCTOR DO ON AP.Doctor_id = DO.Doctor_ID
+GROUP BY DO.Doctor_ID
+ORDER BY COUNT(AP.Patient_id) DESC
+LIMIT 3;
+
+  -- Method 2:
+select t3.*, t4.Doctor_Lic_No, t4.Doctor_Fname, t4.Doctor_Lname, t4.Doctor_Speciality, t4.Doctor_Education, t4.Doctor_Phone,
+t4.Doctor_Email_ID 
+from (select t2.* from 
+(select t1.*, rank() over (partition by t1.month order by no_registered desc) as rn from
+(select month(Appointment_Reg_D) as month, Doctor_id, count(Appointment_ID) as no_registered
+from h4u.appointment group by month(Appointment_Reg_D), Doctor_id 
+order by month(Appointment_Reg_D), count(Appointment_ID)) t1) t2 where t2.rn in (1,2))t3
+left join h4u.doctor t4 on t3.Doctor_id = t4.Doctor_ID;
+
+-- REPORT #15 : Monthly income report.
+select * from H4U.bill;
+drop table H4U.inc_change;
+set @row_number = 0;
+create table H4U.inc_change as
+select t3.*, (@row_number:=@row_number + 1) AS num
+from (select t1.*,(T2.MONTH-1) AS LAST_MTH
+FROM
+(SELECT month(Payment_Date) AS MONTH, sum(Total_Cost) AS inc_month
+FROM H4U.bill GROUP BY MONTH(Payment_Date) order by month(Payment_Date)) t1
+LEFT JOIN 
+(SELECT month(Payment_Date) AS MONTH, sum(Total_Cost) AS inc_month
+FROM H4U.bill GROUP BY MONTH(Payment_Date) order by month(Payment_Date))t2
+ON T1.MONTH = T2.MONTH)t3 order by T3.MONTH;
+select * from H4U.inc_change;
+DROP TABLE H4U.inc_change_2;
+CREATE TABLE H4U.inc_change_2 AS
+SELECT T3.MONTH, T3.inc_month,T4.inc_month AS inc_last_mth
+FROM (SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.inc_month AS inc_last_mth
+FROM H4U.inc_change t1 
+LEFT JOIN 
+H4U.inc_change t2
+ON T1.MONTH = T2.MONTH)T3
+LEFT JOIN 
+(SELECT T1.*,(T2.NUM-1) AS LAST_NUM, T2.inc_month AS inc_last_mth
+FROM H4U.inc_change t1 
+LEFT JOIN 
+H4U.inc_change t2
+ON T1.MONTH = T2.MONTH)T4
+ON T3.LAST_NUM = T4.NUM
+;
+SELECT * FROM H4U.inc_change_2;
+SELECT A.*, (inc_month - inc_last_mth) AS inc_change, 
+concat((round(((inc_month - inc_last_mth)/inc_last_mth)*100,2)),'%') AS CHANGE_RATE
+FROM H4U.inc_change_2 A;
+
+-- REPORT #16 : Detailed medical report BETWEEN '2021-08-01' AND '2021-08-30'
+SELECT AP.Appointment_ID, AP.Appointment_Update_D AS Medical_Examination_Day, 
+       DO.Doctor_Speciality AS Speciality, DO.Doctor_ID, CONCAT(DO.Doctor_Fname,' ',DO.Doctor_Lname) AS Fullname,
+       DI.H_Status AS Type_Of_Service, DI.H_Prescription_Cont AS Result, 
+       RE.Review_Comment AS Comment, RE.Review_Rating AS Rating, 
+       BI.Total_Cost AS Cost
+FROM H4U.APPOINTMENT AP LEFT JOIN H4U.DOCTOR DO ON AP.Doctor_id = DO.Doctor_ID
+						LEFT JOIN H4U.DIAGNOSIS DI ON AP.Appointment_ID = DI.Appointment_id
+						LEFT JOIN H4U.REVIEW RE ON AP.Appointment_ID = RE.Appointment_id
+                        LEFT JOIN H4U.BILL BI ON AP.Appointment_ID = BI.Appointment_id
+WHERE BI.Total_Cost IS NOT NULL AND AP.Appointment_Update_D BETWEEN '2021-08-01' AND '2021-08-30';
