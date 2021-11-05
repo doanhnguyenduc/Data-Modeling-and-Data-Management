@@ -1,0 +1,300 @@
+// ****************************************************************************************************************
+// *                                Instructor: Dr. CHUTIPORN                                                     *
+// *                                Name 1 : NGUYEN DUC DOANH - ID 122059                                         *
+// *                                Name 2 : NGUYEN LE HIEU   - ID 122529                                         *
+// *                                NoSQL Mini Project - HEALTH FOR YOU                                           *
+// *                                HCM, NOV 06TH, 2021                                                           *
+// *                                LINK: mongodb+srv://h4u:h4u@h4u.zp6qm.mongodb.net                             *
+// ****************************************************************************************************************
+// NOTE: In this project, we try to show all the knowledge we have learned while participating in this course, 
+//       we are looking forward to Dr. CHUTIPORN and Mr. Beer for feedback on the assessment of the points that are not correct 
+//       or need to be improved so that we can do better in the future. Thanks so much. 
+
+
+
+// Total number of registered patient accounts. 
+use("h4u");
+db.patient.aggregate([
+    {
+        $group :{   _id : "$Patient_ID",
+                    count_patient_account : {$sum : 1}
+                }
+    },
+    {
+        $group :{   _id : "$count_patient_account",
+                    total_patient_account : {$sum : "$count_patient_account"}
+                }
+    }
+]);
+
+// Total number of female accounts and total number of male accounts.
+use("h4u");
+db.patient.aggregate([
+    {
+      $project: {
+                    male: {$cond: {if: {$eq: ["$Patient_Gender", "MALE"]}, then: 1, else: 0}},
+                    female: {$cond: {if: {$eq: ["$Patient_Gender", "FEMALE"]}, then: 1, else: 0}}
+                }
+    },
+    {
+      $group:   { 
+                    _id: null, 
+                    total_male: {$sum: "$male"},
+                    total_female: {$sum: "$female"},
+                    total_account: {$sum: 1}
+                }
+    }
+]);
+
+// Which living area has the most number of registered customer accounts? 
+
+use("h4u");
+db.patient.aggregate([
+    {
+        $group :    {
+                        _id : "$Patient_Address",
+                        Total : {$sum : 1}
+                    }
+    },
+    {
+        $sort :     {   Total : -1}
+    },
+    {
+        $limit: 1
+    }
+]);
+
+// Number of new accounts customer registered monthly. 
+use("h4u");
+db.patient.aggregate([
+    {
+        $group :
+                {   
+                    _id :   { 
+                            year : {$year : "$Patient_Date_Reg"},
+                            month : {$month : "$Patient_Date_Reg"}
+                            },
+                    total_patient_account_month : {$sum : 1}
+                }
+    },
+    {
+        $sort : {_id : 1}
+    }
+]);
+
+// Total number of registered doctor accounts. 
+// Total number of Ph.D, Master and Bachelor degrees. 
+use("h4u");
+db.doctor.aggregate([
+    {
+      $project: {
+                    Ph_D: {$cond: {if: {$eq: ["$Doctor_Education", "PH.D"]}, then: 1, else: 0}},
+                    Master: {$cond: {if: {$eq: ["$Doctor_Education", "MASTER"]}, then: 1, else: 0}},
+                    Bachelor: {$cond: {if: {$eq: ["$Doctor_Education", "BACHELOR"]}, then: 1, else: 0}}   
+                }
+    },
+    {
+      $group:   { 
+                    _id: null, 
+                    total_Ph_D: {$sum: "$Ph_D"},
+                    total_Master: {$sum: "$Master"},
+                    total_Bachelor: {$sum : "$Bachelor"},
+                    total_Account: {$sum: 1}
+                }
+    }
+]);
+
+// Number of new doctor accounts registered monthly.
+use("h4u"); 
+db.doctor.aggregate([
+    {
+        $group :
+                {   
+                    _id :   { 
+                            year : {$year : "$Doctor_Date_Reg"},
+                            month : {$month : "$Doctor_Date_Reg"}
+                            },
+                    total_doctor_account_month : {$sum : 1}
+                }
+    },
+    {
+        $sort : {_id : 1}
+    }
+]);
+
+// Total number of online appointments registered for medical examination monthly.
+// Number of online appointments successfully registered for medical examination and participating customers. 
+// The number of online appointments registered for medical examination successfully, but customers did not attend. 
+use("h4u");
+db.appointment.aggregate([
+    {
+      $project: {
+                    DONE_STATUS: {$cond: {if: {$eq: ["$Appointment_Status", "DONE"]}, then: 1, else: 0}},
+                    ONPROGRESS_STATUS: {$cond: {if: {$eq: ["$Appointment_Status", "ONPROGRESS"]}, then: 1, else: 0}},
+                    CANCEL_STATUS: {$cond: {if: {$eq: ["$Appointment_Status", "CANCEL"]}, then: 1, else: 0}}   
+                }
+    },
+    {
+      $group:   { 
+                    _id: null, 
+                    total_Done: {$sum: "$DONE_STATUS"},
+                    total_OnProgress: {$sum: "$ONPROGRESS_STATUS"},
+                    total_Cancel: {$sum : "$CANCEL_STATUS"},
+                    total_Appointment: {$sum: 1}
+                }
+    }
+]);
+
+// Total number of visits by the patient monthly.
+use("h4u");
+db.appointment.aggregate([
+    {
+        $group :
+                {   
+                    _id :   { 
+                            year : {$year : "$Appointment_Update_D"},
+                            month : {$month : "$Appointment_Update_D"}
+                            },
+                    total_patient_visit_month : {$sum : 1}
+                }
+    },
+    {
+        $sort : {_id : 1}
+    }
+]);
+
+// Total number of registered customer accounts but never registered for online examination. 
+use("h4u");
+db.patient.aggregate([
+    {
+        $lookup: {
+          from: 'appointment',
+          localField: 'Patient_ID',
+          foreignField: 'Patient_id',
+          as: 'Patient_Info'
+        }
+    },
+    {
+        $match: {
+                    "Patient_Info" : {$size : 0}               
+                }
+    },
+    {
+        $group: {
+                    "_id" : "Patient_ID",
+                    Total : {$sum : 1}
+                }
+    }
+]);
+
+// Total number of customer feedback monthly.
+use("h4u");
+db.review.aggregate([
+    {
+        $group :
+                {   
+                    _id :   { 
+                            year : {$year : "$Review_Date"},
+                            month : {$month : "$Review_Date"}
+                            },
+                    total_patient_review_month : {$sum : 1}
+                }
+    },
+    {
+        $sort : {_id : 1}
+    }
+]);
+
+// List top 2 specialties that are most registered by patients monthly.
+use("h4u");
+db.appointment.aggregate(
+    [
+        { 
+            $project: { 
+                "appointment" : "$$ROOT"
+            }
+        }, 
+        { 
+            $lookup: { 
+                "from" : "doctor",
+                "localField" : "appointment.Doctor_id",
+                "foreignField" : "Doctor_ID", 
+                "as" : "doctor"
+            }
+        },
+        { 
+            $group: { 
+                        "_id" : "$doctor.Doctor_Speciality",
+                        "COUNT(appointment᎐Patient_id)" : {$sum : 1} 
+            }
+        }, 
+        { 
+            $project: { 
+                "Hospital_Speciality" : "$_id", 
+                "Total_Patient" : "$COUNT(appointment᎐Patient_id)"
+            }
+        },
+        {
+            $sort : {"Total_Patient" : -1}   
+        },
+        {
+            $limit : 2
+        }
+    ]
+);
+
+// List top 3 doctors with the most frequency of online medical examination and treatment. 
+use("h4u");
+db.appointment.aggregate(
+    [
+        { 
+            $project: { 
+                "appointment" : "$$ROOT"
+            }
+        }, 
+        { 
+            $lookup: { 
+                "from" : "doctor",
+                "localField" : "appointment.Doctor_id",
+                "foreignField" : "Doctor_ID", 
+                "as" : "doctor"
+            }
+        },
+        { 
+            $group: { 
+                        "_id" : "$doctor.Doctor_ID",
+                        "COUNT(appointment᎐Patient_id)" : {$sum : 1} 
+            }
+        }, 
+        { 
+            $project: {
+                "_id" : 1,
+                "doctor.Doctor_Fname" : 1,
+                "doctor.Doctor_Lname" : 1,
+                "Total_Patient" : "$COUNT(appointment᎐Patient_id)"
+            }
+        },
+        {
+            $sort : {"Total_Patient" : -1}   
+        },
+        {
+            $limit : 3
+        }
+    ]
+);
+
+// Monthly income report.
+use("h4u");
+db.bill.aggregate([
+{$project:{
+    month:{$month: "$Payment_Date"},
+    Total_Cost:1
+    }
+},
+{$group:{
+    _id:{month:"$month"},
+    totalRevenue:{$sum:"$Total_Cost"}
+    }
+},
+{$sort : {_id : 1}}
+]);
