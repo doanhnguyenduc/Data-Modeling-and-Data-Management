@@ -99,7 +99,7 @@ db.doctor.aggregate([
                     total_Ph_D: {$sum: "$Ph_D"},
                     total_Master: {$sum: "$Master"},
                     total_Bachelor: {$sum : "$Bachelor"},
-                    total_Account: {$sum: 1}
+                    total_Doctor_Account: {$sum: 1}
                 }
     }
 ]);
@@ -137,9 +137,9 @@ db.appointment.aggregate([
     {
       $group:   { 
                     _id: null, 
-                    total_Done: {$sum: "$DONE_STATUS"},
-                    total_OnProgress: {$sum: "$ONPROGRESS_STATUS"},
-                    total_Cancel: {$sum : "$CANCEL_STATUS"},
+                    total_Appointment_Done: {$sum: "$DONE_STATUS"},
+                    total_Appointment_OnProgress: {$sum: "$ONPROGRESS_STATUS"},
+                    total_Appointment_Cancel: {$sum : "$CANCEL_STATUS"},
                     total_Appointment: {$sum: 1}
                 }
     }
@@ -182,7 +182,7 @@ db.patient.aggregate([
     {
         $group: {
                     "_id" : "Patient_ID",
-                    Total : {$sum : 1}
+                    Total_Patient_never_online_examination : {$sum : 1}
                 }
     }
 ]);
@@ -287,12 +287,13 @@ db.appointment.aggregate(
 use("h4u");
 db.bill.aggregate([
 {$project:{
+    year:{$year: "$Payment_Date"},
     month:{$month: "$Payment_Date"},
     Total_Cost:1
     }
 },
 {$group:{
-    _id:{month:"$month"},
+    _id:{year: "$year", month:"$month"},
     totalRevenue:{$sum:"$Total_Cost"}
     }
 },
