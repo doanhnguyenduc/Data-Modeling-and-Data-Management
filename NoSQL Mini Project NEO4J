@@ -1,0 +1,240 @@
+// ****************************************************************************************************************
+// *                                Instructor: Dr. CHUTIPORN                                                     *
+// *                                Name 1 : NGUYEN DUC DOANH - ID 122059                                         *
+// *                                Name 2 : NGUYEN LE HIEU   - ID 122529                                         *
+// *                                NoSQL Mini Project (NEO4J) - HEALTH FOR YOU                                   *
+// *                                HCM, NOV 12TH, 2021                                                           *
+// *                                LINK: neo4j+s://ca9c88a8.databases.neo4j.io                                   *
+// ****************************************************************************************************************
+// NOTE: In this project, we try to show all the knowledge we have learned while participating in this course, 
+//       we are looking forward to Dr. CHUTIPORN and Mr. Beer for feedback on the assessment of the points that are not correct 
+//       or need to be improved so that we can do better in the future. Thanks so much. 
+
+
+// ****************************************************************************************************************
+// *                                OPERATION                                                                     *
+// ****************************************************************************************************************
+
+// MYSQL
+
+SELECT * 
+FROM H4UNEO.DOCTOR
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\DOC.csv'
+FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY ''
+LINES TERMINATED BY '\r\n';
+
+SELECT * 
+FROM H4UNEO.PATIENT
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\PATIENT.csv'
+FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY ''
+LINES TERMINATED BY '\r\n';
+
+SELECT * 
+FROM H4UNEO.APPOINTMENT
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\APPOINTMENT.csv'
+FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY ''
+LINES TERMINATED BY '\r\n';
+
+SELECT * 
+FROM H4UNEO.DIAGNOSIS
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\DIAGNOSIS.csv'
+FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY ''
+LINES TERMINATED BY '\r\n';
+
+SELECT * 
+FROM H4UNEO.BILL
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\BILL.csv'
+FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY ''
+LINES TERMINATED BY '\r\n';
+
+SELECT * 
+FROM H4UNEO.REVIEW
+INTO OUTFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\REVIEW.csv'
+FIELDS ENCLOSED BY '"' TERMINATED BY ',' ESCAPED BY ''
+LINES TERMINATED BY '\r\n';
+
+// NEO4J
+
+LOAD CSV WITH HEADERS FROM 'FILE:///DOCTOR.csv' AS doctor
+MERGE (d:Doctor {Doctor_ID: doctor.Doctor_ID, Doctor_Lic_No: doctor.Doctor_Lic_No, Doctor_Fname: doctor.Doctor_Fname, Doctor_Lname: doctor.Doctor_Lname, Doctor_Email_ID: doctor.Doctor_Email_ID, Doctor_Phone: doctor.Doctor_Phone, Doctor_Speciality: doctor.Doctor_Speciality, Doctor_Education: doctor.Doctor_Education, Doctor_Date_Reg: doctor.Doctor_Date_Reg, Doctor_Gender: doctor.Doctor_Gender, Doctor_Account: doctor.Doctor_Account, Doctor_Password: doctor.Doctor_Password})
+RETURN d;
+
+LOAD CSV WITH HEADERS FROM 'FILE:///PATIENT.csv' AS patient
+MERGE (p:Patient {Patient_ID: patient.Patient_ID,Patient_Fname: patient.Patient_Fname,Patient_Lname: patient.Patient_Lname,Patient_Email_ID: patient.Patient_Email_ID,Patient_Phone: patient.Patient_Phone,Patient_DoB: patient.Patient_DoB,Patient_Gender: patient.Patient_Gender,Patient_Address: patient.Patient_Address,Patient_Date_Reg: patient.Patient_Date_Reg,Patient_Account: patient.Patient_Account,Patient_Password: patient.Patient_Password})
+RETURN p;
+
+LOAD CSV WITH HEADERS FROM 'FILE:///APPOINTMENT.csv' AS appointment
+MERGE (a:Appointment {Appointment_ID: appointment.Appointment_ID,Appointment_Reg_D: appointment.Appointment_Reg_D,Appointment_Date: appointment.Appointment_Date,Appointment_Time: appointment.Appointment_Time,Appointment_Status: appointment.Appointment_Status,Appointment_Update_D: appointment.Appointment_Update_D,Doctor_id: appointment.Doctor_id,Patient_id: appointment.Patient_id})
+RETURN a;
+
+LOAD CSV WITH HEADERS FROM 'FILE:///DIAGNOSIS.csv' AS diagnosis
+MERGE (h:Diagnosis {H_Case_ID: diagnosis.H_Case_ID,H_Image: diagnosis.H_Image,H_Blood_Type: diagnosis.H_Blood_Type,H_Current_Signs: diagnosis.H_Current_Signs,H_Drug_Allergy: diagnosis.H_Drug_Allergy,H_Pregnancy: diagnosis.H_Pregnancy,H_Blood_Pressure: diagnosis.H_Blood_Pressure,H_Heart_Rate: diagnosis.H_Heart_Rate,H_Temperature: diagnosis.H_Temperature,H_Status: diagnosis.H_Status,H_Other_Syms: diagnosis.H_Other_Syms,H_Prescription_ID: diagnosis.H_Prescription_ID,H_Prescription_Date: diagnosis.H_Prescription_Date,H_Prescription_Cont: diagnosis.H_Prescription_Cont,Appointment_id: diagnosis.Appointment_id})
+RETURN h;
+
+LOAD CSV WITH HEADERS FROM 'FILE:///BILL.csv' AS bill
+MERGE (b:Bill {Payment_ID: bill.Payment_ID,Bill_ID: bill.Bill_ID,Payment_Date: bill.Payment_Date,Payment_Cont: bill.Payment_Cont,Total_Cost: bill.Total_Cost,Appointment_id: bill.Appointment_id,Patient_id: bill.Patient_id})
+RETURN b;
+
+LOAD CSV WITH HEADERS FROM 'FILE:///REVIEW.csv' AS review
+MERGE (r:Review {Review_ID: review.Review_ID,Review_Date: review.Review_Date,Review_Comment: review.Review_Comment,Review_Rating: review.Review_Rating,Appointment_id: review.Appointment_id,Patient_id: review.Patient_id})
+RETURN r;
+
+MATCH (p:Patient),(a:Appointment), (d:Doctor)
+WHERE p.Patient_ID = a.Patient_id AND a.Doctor_id = d.Doctor_ID
+MERGE (p)-[:BOOK]->(a)-[:SELECT]->(d)
+RETURN p, a, d
+LIMIT 30;
+
+MATCH (a:Appointment), (h:Diagnosis)
+WHERE h.Appointment_id = a.Appointment_ID
+MERGE (a)-[:HAS]->(h)
+RETURN h, a
+LIMIT 30;
+
+MATCH (p:Patient), (b:Bill), (a:Appointment)
+WHERE p.Patient_ID = b.Patient_id AND a.Appointment_ID = b.Appointment_id
+MERGE (p)-[:CHECK]->(b)-[:PAY]->(a)
+RETURN p, a, b
+LIMIT 30;
+
+MATCH (p:Patient), (b:Bill), (a:Appointment)
+WHERE p.Patient_ID = b.Patient_id AND a.Appointment_ID = b.Appointment_id
+MERGE (p)-[:CHECK]->(b)-[:PAY]->(a)
+RETURN p, a, b
+LIMIT 30;
+
+MATCH (p:Patient), (r:Review), (a:Appointment)
+WHERE p.Patient_ID = r.Patient_id AND a.Appointment_ID = r.Appointment_id
+MERGE (p)-[:CHECK]->(r)-[:PAY]->(a)
+RETURN p, a, r
+LIMIT 30;
+
+// ****************************************************************************************************************
+// *                                REPORT                                                                        *
+// ****************************************************************************************************************
+
+//(1)
+//Total number of registered customer accounts. 
+//Total number of female accounts and total number of male accounts. 
+
+MATCH (p:Patient) 
+RETURN p.Patient_Gender AS Gender, count(p) AS NoOfPatient_Accounts;
+
+//(2)
+//Which living area has the most number of registered customer accounts? 
+
+MATCH (p:Patient)  
+RETURN p.Patient_Address AS Area, count(p) AS NoOfPatients
+ORDER BY count(p) DESC
+LIMIT 1;
+
+//(3)
+//Number of new accounts customer registered monthly
+
+MATCH (p:Patient)
+WITH p,
+[item in split(p.Patient_Date_Reg,"-") | toInteger(item)] AS dateComponents
+RETURN 
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).year as year,
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).month as month,
+count(p.Patient_ID);
+
+// (4)
+// Total number of registered doctor accounts. 
+// Total number of Ph.D, Master and Bachelor degrees.
+
+MATCH (d:Doctor) 
+RETURN d.Doctor_Gender AS Gender, count(d) AS NoOfDoctor_Accounts;
+
+MATCH (d:Doctor) 
+RETURN d.Doctor_Education AS DoctorEducation, count(d) AS NoOfDoctor_Accounts;
+
+// (5)
+// Number of new doctor accounts registered monthly. 
+
+MATCH (d:Doctor)
+WITH d,
+[item in split(d.Doctor_Date_Reg,"-") | toInteger(item)] AS dateComponents
+RETURN 
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).year as year,
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).month as month,
+count(d.Doctor_ID) AS NumberOfNewDoctors;
+
+// (6)
+// Total number of online appointments registered for medical examination monthly. 
+And Customers did not attend. 
+
+MATCH (a:Appointment) 
+RETURN a.Appointment_Status AS AppointmnetStatus, count(a) AS NoOfAppointmnet;
+
+
+// (7)
+// Total number of visits by the patient monthly.
+
+MATCH (a:Appointment)
+WITH a,
+[item in split(a.Appointment_Update_D,"-") | toInteger(item)] AS dateComponents
+RETURN 
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).year as year,
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).month as month,
+count(a.Appointment_Update_D) AS TotalOfPatientVisit_ByMonth
+ORDER BY year, month;
+
+// (8)
+//Total number of registered customer accounts 
+//but never registered for online examination.
+
+MATCH (p:Patient)
+WHERE NOT (p)-[:BOOK]-(:Appointment)
+RETURN p
+
+MATCH (p:Patient)
+WHERE NOT (p)-[:BOOK]-()
+RETURN p
+
+MATCH (p:Patient)
+WHERE NOT (p)-[:BOOK]-(:Appointment)
+RETURN COUNT(DISTINCT p) AS TotalNumberPatients_NeverRegistered;
+
+// (9)
+// Total number of customer feedback monthly.
+
+MATCH (r:Review)
+WITH r,
+[item in split(r.Review_Date,"-") | toInteger(item)] AS dateComponents
+RETURN 
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).year as year,
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).month as month,
+count(r.Review_Date) AS TotalOfCustomerFeedback_ByMonth
+ORDER BY year, month;
+
+// (10)
+// List top 2 specialties that are most registered by patients monthly.
+
+MATCH (d:Doctor), (a:Appointment)
+WHERE (d)-[:SELECT]-(a)
+RETURN d.Doctor_Speciality AS Speciality, COUNT(DISTINCT a.Patient_id) AS Total_Number_Patients
+ORDER BY Total_Number_Patients DESC
+LIMIT 2;
+
+// (11)
+//List top 3 doctors with the most frequency of online medical examination 
+//and treatment.
+
+MATCH (d:Doctor), (a:Appointment)
+WHERE (d)-[:SELECT]-(a)
+RETURN d.Doctor_ID AS DoctorID, d.Doctor_Fname AS Name,COUNT(DISTINCT a.Patient_id) AS Total_Number_Patients
+ORDER BY Total_Number_Patients DESC
+LIMIT 3;
+
+
+// (12)
+//Monthly income report.
+
+MATCH (b:Bill)
+WITH b,
+[item in split(b.Payment_Date,"-") | toInteger(item)] AS dateComponents
+RETURN 
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).year as year,
+(date({year:dateComponents[0],month: dateComponents[1],day:1})).month as month, sum(tofloat(b.Total_Cost)) AS TotalCost
+ORDER BY year, month;
